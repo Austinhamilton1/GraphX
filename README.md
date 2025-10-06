@@ -1,2 +1,2 @@
-# gisa
-GISA (Graph ISA) is a research playground for graph computing.
+# GraphX
+GraphX (Graph Accelerator) is a research playground for graph computing.
