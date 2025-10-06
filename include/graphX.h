@@ -11,13 +11,20 @@
 #define VM_HALT     0
 #define VM_ERROR    -1
 
+#define REGISTER_ARG_MASK   0x000001FF
 #define IMMEDIATE_ARG_MASK  0x07FFFFFF
+#define CONSTANT_ARG_MASK   0x0003FFFF
+
+#define ARG1(vm) (vm->A0)
+#define ARG2(vm) (vm->A1)
+#define ARG3(vm) (vm->A2)
+
+#define IMM(vm) (vm->A0)
 
 typedef enum {
     HALT,       // End of program
 
     /* Immediate instructions */
-    LDNI,       // Load node immediate
     JMP,        // Unconditional branch
     BZ,         // Conditional branch if zero
 
@@ -29,7 +36,6 @@ typedef enum {
     /* Register instructions */
     ADD,        // Addition
     SUB,        // Subtraction
-    LDN,        // Load node
     ITER,       // Iterator
     NEIGHBOR,   // Next neighbor
     DEGREE,     // Degree of node
@@ -50,7 +56,8 @@ typedef struct graphX_vm_t {
     uint32_t            FN;             // Frontier node
     float               FW;             // Frontier weight
     uint32_t            program[8192];  // Instructions to run
-    uint8_t             memory[65536];  // Memory
+    uint32_t             memory[65536]; // Memory
+    int                 debug;          // Debug flag
     graph_t             *graph;         // Graph data structure
     graph_iterator_t    *it;            // Graph iterator if needed
     frontier_t          *frontier;      // Frontier if needed
@@ -63,5 +70,8 @@ int execute(graphX_vm_t *vm);
 
 /* Run a graphX program */
 int run(graphX_vm_t *vm);
+
+/* Reset a VM */
+void graphX_reset(graphX_vm_t *vm);
 
 #endif
