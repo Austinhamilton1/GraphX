@@ -35,23 +35,107 @@ int decode(graphX_vm_t *vm, uint32_t data) {
     vm->ISA = (data >> 27) & 0x1F;
 
     // If a valid opcode is passed, return it
-    if(vm->ISA == HALT) {
+    switch(vm->ISA) {
+    case HALT:
         // Halt does nothing
         return 0;
-    } else if(vm->ISA >= JMP && vm->ISA <= BZ) {
-        // Immediate instructions utilize all lower 27 bits
-        vm->A0 = data & IMMEDIATE_ARG_MASK;
+    case BZ:
+        // BZ is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
-    } else if(vm->ISA >= LD && vm->ISA <= MOV) {
-        // Memory instructions have a register and a constant
-        vm->A0 = (data >> 18) & REGISTER_ARG_MASK;
-        vm->A1 = data & CONSTANT_ARG_MASK;
+    case BNZ:
+        // BNZ is an immediate instruction
+        ARG(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
-    } else if(vm->ISA >= ADD && vm->ISA <= CMP) {
-        // Arguments are stored in least significant 27 bits
-        vm->A0 = (data >> 18) & REGISTER_ARG_MASK;
-        vm->A1 = (data >> 9) & REGISTER_ARG_MASK;
-        vm->A2 = data & REGISTER_ARG_MASK;
+    case JMP:
+        // JMP is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
+        return 0;
+    case LDN:
+        // LDN is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
+        return 0;
+    case ITER:
+        // ITER takes no arguments
+        return 0;
+    case NEXT:
+        // NEXT doesn't take any arguments
+        return 0;
+    case LDV:
+        // LDV doesn't take any arguments
+        return 0;
+    case HASN:
+        // HASN doesn't take any arguments
+        return 0;
+    case HASE:
+        // HASE is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
+        return 0;
+    case ADD:
+        // ADD adds a register value to a register and stores it in another register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
+        ARG3(vm) = (data >> 18) & REGISTER_ARG_MASK;
+        return 0;
+    case ADDI:
+        // ADDI adds a constant value to a register and stores it in another register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
+        ARG3(vm) = data & REG_CONSTANT_ARG_MASK;
+    case SUB:
+        // SUB subtracts a register value from a register and stores it in another register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
+        ARG3(vm) = (data >> 18) & REGISTER_ARG_MASK;
+        return 0;
+    case SUBI:
+        // SUBI subtracts a constant value from a register and stores it in another register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
+        ARG3(vm) = data & REG_CONSTANT_ARG_MASK;
+        return 0;
+    case CMP:
+        // CMP compares two register values and stores the results in the FLAG register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
+        return 0;
+    case MOV:
+        // MOV moves a register value from a source register to a destination register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
+        return 0;
+    case MOVI:
+        // MOVI moves a constant value into a register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = data & CONSTANT_ARG_MASK;
+        return 0;
+    case CLR:
+        // CLR sets the value of a register to 0
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        return 0;
+    case LD:
+        // LD loads a value from memory to a register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = data & CONSTANT_ARG_MASK;
+        return 0;
+    case ST:
+        // ST stores a valeu from a register to memory
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = data & CONSTANT_ARG_MASK;
+        return 0;
+    case PUSH:
+        // PUSH pushes a register to the frontier
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        return 0;
+    case POP:
+        // POP pops a node from the frontier into a register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        return 0;
+    case FEMPTY:
+        // FEMPTY takes no arguments
+        return 0;
+    case FSWAP:
+        // FSWAP takes no arguments
         return 0;
     }
 
@@ -71,76 +155,110 @@ int execute(graphX_vm_t *vm) {
     // Parse out the opcode and arguments
     uint32_t opcode, arg1, arg2, arg3;
     opcode = vm->ISA;
-    arg1 = vm->A0;
-    arg2 = vm->A1;
-    arg3 = vm->A2;
+    arg1 = ARG1(vm);
+    arg2 = ARG2(vm);
+    arg3 = ARG3(vm);
 
-    switch (opcode) {
+    // Execute the inputted opcode
+    switch(opcode) {
     case HALT:
+        // Halt does nothing
         return VM_HALT;
+    case BZ:
+        // Bounds checking
+        if(arg1 >= 8192) return VM_ERROR;
+        
+        // Conditional check for zero
+        if(FLAG_0(vm))
+            vm->PC = arg1;
+        break;
+    case BNZ:
+        // Bounds checking
+        if(arg1 >= 8192) return VM_ERROR;
+
+        // Conditional check for non-zero
+        if(!FLAG_0(vm))
+            vm->PC = arg1;        
         break;
     case JMP:
+        // Bounds checking
+        if(arg1 >= 8192) return VM_ERROR;
 
-        return VM_CONTINUE;
+        // Unconditional branch
+        vm->PC = arg1;
         break;
-    case BZ:
-
-        return VM_CONTINUE;
-        break;
-    case LD:
-        
-        return VM_CONTINUE;
-        break;
-    case ST:
-
-        return VM_CONTINUE;
-        break;
-    case MOV:
-
-        return VM_CONTINUE;
-        break;
-    case ADD:
-
-        return VM_CONTINUE;
-        break;
-    case SUB:
-
-        return VM_CONTINUE;
+    case LDN:
+        // Load in argument into register
+        vm->Rnode = arg1;
         break;
     case ITER:
-
-        return VM_CONTINUE;
+        // Initialize the internal iterator
+        vm->iter = 0;
         break;
-    case NEIGHBOR:
-
-        return VM_CONTINUE;
+    case NEXT:
+        // Get the next neighbor
+        vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->iter++];
         break;
-    case DEGREE:
-
-        return VM_CONTINUE;
+    case LDV:
+        // Get the weight between the current node and the next neighbor
+        vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->iter-1];
         break;
-    case FPUSH:
-
-        return VM_CONTINUE;
+    case HASN:
+        // Check if the current node has any more neighbors
+        if(vm->graph->row_index[vm->Rnode] + vm->iter >= vm->graph->row_index[vm->Rnode+1])
+            vm->FLAGS |= 0x1;
         break;
-    case FPOP:
+    case HASE:
+        // Check if there is an edge between two nodes (binary search)
+        /* Needs to be implemented */
+        break;
+    case ADD:
         
-        return VM_CONTINUE;
         break;
-    case FEMPTY:
-
-        return VM_CONTINUE;
+    case ADDI:
+        
+        break;
+    case SUB:
+        
+        break;
+    case SUBI:
+        
         break;
     case CMP:
         
-        return VM_CONTINUE;
+        break;
+    case MOV:
+        
+        break;
+    case MOVI:
+        
+        break;
+    case CLR:
+        
+        break;
+    case LD:
+        
+        break;
+    case ST:
+        
+        break;
+    case PUSH:
+        
+        break;
+    case POP:
+        
+        break;
+    case FEMPTY:
+        
+        break;
+    case FSWAP:
+        
         break;
     default:
         return VM_ERROR;
-        break;
     }
 
-    return VM_HALT;
+    return VM_CONTINUE;
 }
 
 /* 
@@ -185,7 +303,6 @@ void graphX_reset(graphX_vm_t *vm) {
     vm->A0 = 0;
     vm->A1 = 0;
     vm->A2 = 0;
-    vm->A3 = 0;
     vm->N0 = 0;
     vm->N1 = 0;
     vm->N2 = 0;

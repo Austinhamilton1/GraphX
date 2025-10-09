@@ -5,15 +5,15 @@
 #include "datastructures.h"
 #include "graph.h"
 
-#define VM_MEMORY_SIZE 65536
-
 #define VM_CONTINUE 1
 #define VM_HALT     0
 #define VM_ERROR    -1
 
-#define REGISTER_ARG_MASK   0x000001FF
-#define IMMEDIATE_ARG_MASK  0x07FFFFFF
-#define CONSTANT_ARG_MASK   0x0003FFFF
+#define OPCODE_ARG_MASK         0x0000001F  // 5 bit opcodes
+#define REGISTER_ARG_MASK       0x00000007  // 3 bit register arguments
+#define IMMEDIATE_ARG_MASK      0x07FFFFFF  // 27 bit immediate arguments
+#define CONSTANT_ARG_MASK       0x00FFFFFF  // 24 bit constant arguments
+#define REG_CONSTANT_ARG_MASK   0x001FFFFF  // 21 bit register constant arguments
 
 #define ARG1(vm) (vm->A0)
 #define ARG2(vm) (vm->A1)
@@ -21,45 +21,62 @@
 
 #define IMM(vm) (vm->A0)
 
+#define FLAG_0(vm) ((vm->R) & 0x1)
+#define FLAG_POS(vm) (((vm->R) >> 1) & 0x1)
+#define FLAG_NEG(vm) (((vm->R) >> 2) & 0x1)
+
 typedef enum {
+
+    /* Control flow */
     HALT,       // End of program
-
-    /* Immediate instructions */
-    JMP,        // Unconditional branch
     BZ,         // Conditional branch if zero
+    BNZ,        // Conditional branch if not zero
+    JMP,        // Unconditional jump
 
-    /* Memory instructions */
-    LD,         // Load from memory
-    ST,         // Store to memory
-    MOV,        // Constant register function
+    /* Graph access instructions */
+    LDN,        // Load node into Rnode
+    ITER,       // Initialize neighbor iteration
+    NEXT,       // Load next neighbor into Rnbr
+    LDV,        // Load edge weight into Rval
+    HASN,       // Check if more neighbors exist
+    HASE,       // Check if there is an edge between Rnode and input node
+    
+    /* Arithmetic and logic*/
+    ADD,        // Add edge weight
+    ADDI,       // Add immediate value
+    SUB,        // Subtract edge weight,
+    SUBI,       // Subtract immediate value
+    CMP,        // Compare, set FLAGS
+    MOV,        // Move
+    MOVI,       // Move immediate
+    CLR,        // Zero register
 
-    /* Register instructions */
-    ADD,        // Addition
-    SUB,        // Subtraction
-    ITER,       // Iterator
-    NEIGHBOR,   // Next neighbor
-    DEGREE,     // Degree of node
-    FPUSH,      // Frontier push
-    FPOP,       // Frontier pop
-    FEMPTY,     // Frontier empty
-    CMP,        // Compare two registers
+    /* Memory access */
+    LD,         // Load accumulator from memory
+    ST,         // Store accumulator
+    PUSH,       // Add neighbor to next frontier
+    POP,        // Load next node from frontier
+
+    /* Frontier control */
+    FEMPTY,     // Check if frontier is empty
+    FSWAP,      // Swap next frontier and current frontier buffers
+
 } instruction;
 
 /* Graph Accelerator VM */
 typedef struct graphX_vm_t {
     uint32_t            PC;             // Program counter
     instruction         ISA;            // Instruction register
-    int32_t             R;              // Operation result register
+    uint32_t            FLAGS;          // Operation result register
     uint32_t            A0, A1, A2;     // Argument registers
-    uint32_t            N0, N1, N2, N3; // Node registers
-    float               W0, W1, W2, W3; // Weight registers
-    uint32_t            FN;             // Frontier node
-    float               FW;             // Frontier weight
+    uint32_t            Rnode, Rnbr;    // Current node and neighbor node
+    int32_t             Rval;           // Current weight
+    int32_t             Racc, Rtmp;     // Weight accumulator and temporary scratch register
     uint32_t            program[8192];  // Instructions to run
-    uint32_t             memory[65536]; // Memory
+    uint32_t            memory[65536];  // Memory
+    uint32_t            iter;           // Iterator index
     int                 debug;          // Debug flag
     graph_t             *graph;         // Graph data structure
-    graph_iterator_t    *it;            // Graph iterator if needed
     frontier_t          *frontier;      // Frontier if needed
 } graphX_vm_t;
 
