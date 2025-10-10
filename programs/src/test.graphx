@@ -1,0 +1,11 @@
+; Simple Test Program
+; Add the numbers 1 - 10 to the Accumulator
+
+.code
+MOVI Rtmp, 10
+loop:
+    ADD Racc, Racc, Rtmp
+    SUBI Rtmp, Rtmp, 1
+    CMP Rtmp, Rzero
+    BNZ loop
+HALT

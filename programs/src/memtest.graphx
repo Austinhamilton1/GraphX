@@ -1,0 +1,15 @@
+; Simple Memory Test
+; Read number from memory and add all numbers from 1 - that number
+
+.mem
+0x1A ; 26 in decimal
+
+.code
+LD Rtmp 0 ; Read in 26 from memory
+loop:
+    ADD Racc, Racc, Rtmp
+    SUBI Rtmp, Rtmp, 1
+    CMP Rtmp, Rzero
+    BNZ loop
+ST Racc 1 ; Store the answer in memory
+HALT

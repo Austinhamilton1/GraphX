@@ -9,7 +9,7 @@
 
 /* Ring-buffer implemented FIFO data structure */
 struct queue_t {
-    uint32_t    data[MAX_QUEUE_SIZE];   // Data in the queue
+    uint32_t        data[MAX_QUEUE_SIZE];   // Data in the queue
     uint64_t        front;                  // Front of the queue (pop from this)
     uint64_t        back;                   // Back of the queue (push to this)
 };

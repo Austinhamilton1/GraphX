@@ -3,13 +3,15 @@
 
 #include "datastructures.h"
 
+#define MAX 65536
+
 /* Represents a graph (compressed sparse row format) */
 typedef struct graph_t {
     uint32_t    m;              // Rows
     uint32_t    n;              // Columns
-    uint32_t    *col_index;     // Index of value in columna
-    uint32_t    *row_index;     // Index of value in rows
-    uint32_t    *values;        // Value (weights)
+    uint32_t    col_index[MAX]; // Index of value in columna
+    uint32_t    row_index[MAX]; // Index of value in rows
+    uint32_t    values[MAX];    // Value (weights)
 } graph_t;
 
 /* Used to efficiently iterate a node's neighbors */
@@ -24,13 +26,13 @@ typedef struct graph_iterator_t {
 } graph_iterator_t;
 
 /* Edge functions  */
-float graph_get_weight(graph_t *graph, uint32_t u, uint32_t v);
+uint32_t graph_get_weight(graph_t *graph, uint32_t u, uint32_t v);
 int graph_has_edge(graph_t *graph, uint32_t u, uint32_t v);
 
 /* Get the neighbors of node u */
 uint32_t *graph_get_neighbors(graph_t *graph, uint32_t u, int *size);
 int graph_init_iterator(graph_iterator_t *it, graph_t *graph, uint32_t node);
-int graph_next_neighbor(graph_iterator_t *it, uint32_t *neighbor, float *weight);
+int graph_next_neighbor(graph_iterator_t *it, uint32_t *neighbor, uint32_t *weight);
 
 /* Get the degree of a node */
 size_t graph_degree(graph_t *graph, uint32_t node);

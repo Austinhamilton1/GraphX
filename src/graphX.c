@@ -13,7 +13,7 @@
  */
 uint32_t fetch(graphX_vm_t *vm) {
     // Return HALT if the PC is out of bounds
-    if(vm->PC >= 8192) return VM_HALT;
+    if(vm->PC >= PROGRAM_SIZE) return VM_HALT;
 
     // Fetch the next instruction
     uint32_t data = vm->program[vm->PC];
@@ -120,9 +120,19 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         ARG2(vm) = data & CONSTANT_ARG_MASK;
         return 0;
     case ST:
-        // ST stores a valeu from a register to memory
-        ARG1(vm) = (data >> 3) & CONSTANT_ARG_MASK;
-        ARG2(vm) = data & REGISTER_ARG_MASK;
+        // ST stores a value from a register to memory
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = data & CONSTANT_ARG_MASK;
+        return 0;
+    case LDR:
+        // LDR loads an address from a register into another register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
+        return 0;
+    case STR:
+        // STR stores a register to an address from another register
+        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
+        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
         return 0;
     case PUSH:
         // PUSH pushes a register to the frontier
@@ -150,9 +160,9 @@ int decode(graphX_vm_t *vm, uint32_t data) {
  * Arguments:
  *     graphX_vm_t *vm - Execute the instruction on this vm.
  * Returns:
- *     int - 0 on success, -1 on failure.
+ *     vm_status_t - The state of the VM after execution.
  */
-int execute(graphX_vm_t *vm) {
+vm_status_t execute(graphX_vm_t *vm) {
     // Parse out the opcode and arguments
     uint32_t opcode, arg1, arg2, arg3;
     opcode = vm->ISA;
@@ -168,23 +178,23 @@ int execute(graphX_vm_t *vm) {
         return VM_HALT;
     case BZ:
         // Bounds checking
-        if(arg1 >= sizeof(vm->program) / sizeof(uint32_t)) return VM_ERROR;
+        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
         
         // Conditional check for zero
-        if(FLAG_0(vm))
+        if(vm->FLAGS & FLAG_ZERO)
             vm->PC = arg1;
         break;
     case BNZ:
         // Bounds checking
-        if(arg1 >= sizeof(vm->program) / sizeof(uint32_t)) return VM_ERROR;
+        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
 
         // Conditional check for non-zero
-        if(!FLAG_0(vm))
+        if(!(vm->FLAGS & FLAG_ZERO))
             vm->PC = arg1;        
         break;
     case JMP:
         // Bounds checking
-        if(arg1 >= sizeof(vm->program) / sizeof(uint32_t)) return VM_ERROR;
+        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
 
         // Unconditional branch
         vm->PC = arg1;
@@ -199,7 +209,10 @@ int execute(graphX_vm_t *vm) {
         break;
     case NEXT:
         // Get the next neighbor
-        vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->iter++];
+        if(vm->graph->row_index[vm->Rnode] + vm->iter < vm->graph->row_index[vm->Rnode+1])
+            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->iter++];
+        else
+            vm->FLAGS |= FLAG_ZERO; // Signal done
         break;
     case LDV:
         // Get the weight between the current node and the next neighbor
@@ -207,12 +220,16 @@ int execute(graphX_vm_t *vm) {
         break;
     case HASN:
         // Check if the current node has any more neighbors
+        vm->FLAGS = 0;
         if(vm->graph->row_index[vm->Rnode] + vm->iter >= vm->graph->row_index[vm->Rnode+1])
-            vm->FLAGS |= 0x1;
+            vm->FLAGS |= FLAG_ZERO;
         break;
     case HASE:
         // Check if there is an edge between two nodes (binary search)
-        /* Needs to be implemented */
+        // You can branch with BZ after this
+        vm->FLAGS = 0;
+        if(graph_has_edge(vm->graph, vm->Rnode, arg1))
+            vm->FLAGS |= FLAG_ZERO;
         break;
     case ADD:
         // Add two registers and store the result in a third register
@@ -232,9 +249,11 @@ int execute(graphX_vm_t *vm) {
         break;
     case CMP:
         // Compare two registers and store the results in FLAGS
+        vm->FLAGS = 0;
         comp = vm->R[arg1] - vm->R[arg2];
-        if(comp == 0) vm->FLAGS |= 0x1;
-        else vm->FLAGS &= ~(0x1);
+        if(comp == 0) vm->FLAGS |= FLAG_ZERO;
+        else if(comp < 0) vm->FLAGS |= FLAG_NEG;
+        else vm->FLAGS |= FLAG_POS;
         break;
     case MOV:
         // Move one register to another
@@ -250,21 +269,42 @@ int execute(graphX_vm_t *vm) {
         break;
     case LD:
         // Load a value from memory into a register
+        // Bounds check
+        if(arg2 > MEMORY_SIZE) return VM_ERROR;
         vm->R[arg1] = vm->memory[arg2];
         break;
     case ST:
         // Store a value from a register into memory
-        vm->memory[arg1] = vm->R[arg2];
+        // Bounds check
+        if(arg2 > MEMORY_SIZE) return VM_ERROR;
+        vm->memory[arg2] = vm->R[arg1];
         break;
+    case LDR:
+        // Load a value from an memory specified by a register address
+        // Bounds check
+        if(vm->R[arg2] > MEMORY_SIZE) return VM_ERROR;
+        vm->R[arg1] = vm->memory[vm->R[arg2]];
+        break;
+    case STR:
+        // Store a value in memory specified by a register address
+        // Bounds check
+        if(vm->R[arg2] > MEMORY_SIZE) return VM_ERROR;
+        vm->memory[vm->R[arg2]] = vm->R[arg1];
     case PUSH:
+        // Push to the frontier
         frontier_push(vm->frontier, vm->R[arg1]);
         break;
     case POP:
+        // Pop from the frontier
         frontier_pop(vm->frontier, &vm->R[arg1]);
         break;
     case FEMPTY:
-        if(frontier_empty(vm->frontier)) vm->FLAGS |= 0x1;
-        else vm->FLAGS &= ~(0x1);
+        // Check if the frontier is empty
+        // If the frontier is empty, program can BZ
+        if(frontier_empty(vm->frontier)) 
+            vm->FLAGS |= FLAG_ZERO;
+        else 
+            vm->FLAGS &= ~FLAG_ZERO;
         break;
     case FSWAP:
         /* Needs to be implemented */
@@ -282,22 +322,18 @@ int execute(graphX_vm_t *vm) {
  * Arguments:
  *     graphX_vm_t *vm - The vm to run.
  * Returns:
- *     int - The exit code of the program.
+ *     vm_status_t - The exit code of the program.
  */
-int run(graphX_vm_t *vm) {
-    int result = VM_CONTINUE;
+vm_status_t run(graphX_vm_t *vm) {
+    vm_status_t result = VM_CONTINUE;
 
     // Fetch, decode, execute pipeline
-    while(result > 0) {
+    while(result == VM_CONTINUE) {
         uint32_t data = fetch(vm);
-        if(decode(vm, data) < 0) break;
+        if(data == VM_HALT) return VM_HALT;
+        if(decode(vm, data) < 0) return VM_ERROR;
         result = execute(vm);
-        if(vm->debug) {
-            printf("PC: %u, ISA=%u, FLAGS=%u iter=%u\n", vm->PC, vm->ISA, vm->FLAGS, vm->iter);
-            printf("A0=%u, A1=%u, A2=%u\n", vm->A0, vm->A1, vm->A2);
-            printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u, Rtmp=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc, vm->Rtmp);
-            printf("\n");
-        }
+        if(vm->debug) vm->debug(vm);
     }
 
     return result;
@@ -321,6 +357,9 @@ void graphX_reset(graphX_vm_t *vm) {
     vm->Rnbr = 0;
     vm->Racc = 0;
     vm->Rtmp = 0;
+    vm->Rzero = 0;
+    vm->iter = 0;
     memset(vm->memory, 0, sizeof(vm->memory));
-    frontier_init(vm->frontier, FRONTIER_QUEUE);
+    if(vm->frontier)
+        frontier_init(vm->frontier, FRONTIER_QUEUE);
 }

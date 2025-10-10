@@ -1,4 +1,5 @@
 from ctypes import c_uint, c_float, Structure
+import re
 
 class Graph:
     def __init__(self, graph_matrix: list[list[float]]) -> None:
@@ -19,15 +20,29 @@ class Graph:
                     col_length += 1
         self.row_index.append(col_length)
 
-    def to_c(self):
-        class graph_t(Structure):
-            _fields_ = [
-                ('m', c_uint), 
-                ('n', c_uint),
-                ('col_index', c_uint * len(self.col_index)),
-                ('row_index', c_uint * len(self.row_index)),
-                ('values', c_float * len(self.values)),
-            ]
+    def __str__(self):
+        '''Print the graph in graphX ASM format'''
+        result = ''
+        result += f'.row_index\n{", ".join(map(str, self.row_index))}\n'
+        result += f'.col_index\n{", ".join(map(str, self.col_index))}\n'
+        result += f'.values\n{", ".join(map(str, self.values))}\n'
+        return result
 
-        g = graph_t(self.m, self.n, self.col_index, self.row_index, self.values)
-        return g
+
+def main():
+    '''Take a graph matrix and return a graphX ASM formatted graph'''
+    m = int(input('Enter the number of nodes> '))
+
+    # Consume the graph matrix
+    graph_matrix = [[None for _ in range(m)] for _ in range(m)]
+    for i in range(m):
+        row = input(f'row {i+1}> ')
+        values = re.split(r'[,\s]+', row)
+        for j in range(m):
+            graph_matrix[i][j] = int(values[j])
+
+    graph = Graph(graph_matrix)
+    print(graph)
+
+if __name__ == '__main__':
+    main()

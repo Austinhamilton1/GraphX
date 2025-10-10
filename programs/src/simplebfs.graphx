@@ -1,0 +1,46 @@
+; Simple BFS on a very small toy graph
+
+.row_index
+0, 2, 5, 8, 10, 12
+
+.col_index
+1, 2, 0, 2, 3, 0, 1, 4, 1, 4, 2, 3
+
+.values
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+
+.code
+MOVI Rtmp, 0        ; Start with the first node
+PUSH Rtmp           ; Start the frontier
+
+MOVI Racc, 1        ; Mark the first node as visited
+STR Rtmp, Racc
+
+MOVI Racc, 65535    ; Start of BFS result (works backwards)
+
+loop:
+    FEMPTY
+    BZ done
+    POP Rnode       ; Get next node
+    STR Rnode, Racc
+    SUBI Racc, Racc, 1
+
+neighbor_loop:
+    HASN
+    BZ loop
+    NEXT            ; Get neighbor
+
+    ; Check if visited
+    LDR Rtmp, Rnbr  ; visited[neighbor]
+    CMP Rtmp, Rzero
+    BNZ neighbor_loop
+
+    ; If not visited, mark and push
+    MOVI Rtmp, 1    ; Need to store a 1 at visited[neighbor]
+    STR Rtmp, Rnbr  ; Store the 1 at visited[neighbor]
+
+    PUSH Rnbr       ; Add to frontier
+    JMP neighbor_loop
+
+done:
+    HALT
