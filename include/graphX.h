@@ -19,11 +19,7 @@
 #define ARG2(vm) (vm->A1)
 #define ARG3(vm) (vm->A2)
 
-#define IMM(vm) (vm->A0)
-
-#define FLAG_0(vm) ((vm->R) & 0x1)
-#define FLAG_POS(vm) (((vm->R) >> 1) & 0x1)
-#define FLAG_NEG(vm) (((vm->R) >> 2) & 0x1)
+#define FLAG_0(vm) ((vm->FLAGS) & 0x1)  // Check if CMP resulted in zero
 
 typedef enum {
 
@@ -63,15 +59,34 @@ typedef enum {
 
 } instruction;
 
+typedef enum {
+    R_NODE = 0,
+    R_NBR,
+    R_VAL,
+    R_ACC,
+    R_TMP,
+    R_COUNT,
+} reg;
+
 /* Graph Accelerator VM */
 typedef struct graphX_vm_t {
     uint32_t            PC;             // Program counter
     instruction         ISA;            // Instruction register
     uint32_t            FLAGS;          // Operation result register
     uint32_t            A0, A1, A2;     // Argument registers
-    uint32_t            Rnode, Rnbr;    // Current node and neighbor node
-    int32_t             Rval;           // Current weight
-    int32_t             Racc, Rtmp;     // Weight accumulator and temporary scratch register
+
+    /* Register file */
+    union {
+        struct {
+            uint32_t    Rnode;          // Current node
+            uint32_t    Rnbr;           // Neighbor node
+            uint32_t    Rval;           // Weight value
+            uint32_t    Racc;           // Accumulator register
+            uint32_t    Rtmp;           // Temporary register
+        };
+        uint32_t        R[R_COUNT];     // Register indexer
+    };
+
     uint32_t            program[8192];  // Instructions to run
     uint32_t            memory[65536];  // Memory
     uint32_t            iter;           // Iterator index

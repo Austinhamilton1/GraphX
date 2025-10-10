@@ -26,11 +26,11 @@ static int queue_init(struct queue_t *queue) {
  *
  * Arguments:
  *     struct queue_t *queue - The queue to push to.
- *     unsigned int node - Push this node to the queue.
+ *     uint32_t node - Push this node to the queue.
  * Returns:
  *     int - 0 on success, -1 on failure.
  */
-static int queue_push(struct queue_t *queue, unsigned int node) {
+static int queue_push(struct queue_t *queue, uint32_t node) {
     // NULL check
     if(!queue) return -1;
 
@@ -48,11 +48,11 @@ static int queue_push(struct queue_t *queue, unsigned int node) {
  *
  * Arguments:
  *     struct queue_t *queue - Queue to pop from.
- *     unsigned int *result - Put result here.
+ *     uint32_t *result - Put result here.
  * Returns:
  *     int - 0 on success, -1 on failure.
  */
-static int queue_pop(struct queue_t *queue, unsigned int *result) {
+static int queue_pop(struct queue_t *queue, uint32_t *result) {
     // NULL check
     if(!queue || !result) return -1;
 
@@ -116,11 +116,11 @@ int frontier_init(frontier_t *frontier, frontier_type_t backend_type) {
  *
  * Arguments:
  *     frontier_t *frontier - Push to this frontier.
- *     unsigned int node - Push this node.
+ *     uint32_t node - Push this node.
  * Returns:
  *     int - 0 on success, -1 on error.
  */
-int frontier_push(frontier_t *frontier, unsigned int node) {
+int frontier_push(frontier_t *frontier, uint32_t node) {
     // NULL check
     if(!frontier) return -1;
     int result;
@@ -143,11 +143,11 @@ int frontier_push(frontier_t *frontier, unsigned int node) {
  *
  * Arguments:
  *     frontier_t *frontier - The frontier to pop from.
- *     unsigned int *node - Pop result to this node.
+ *     uint32_t *node - Pop result to this node.
  * Returns:
  *     int - 0 on success, -1 on error.
  */
-int frontier_pop(frontier_t *frontier, unsigned int *node) {
+int frontier_pop(frontier_t *frontier, uint32_t *node) {
     // NULL check 
     if(!frontier) return -1;
     int result;

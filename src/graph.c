@@ -7,21 +7,21 @@
  *
  * Arguments:
  *     graph_t *graph - The graph to query.
- *     unsigned int u - Source node.
- *     unsigned int v - Destination node.
+ *     uint32_t u - Source node.
+ *     uint32_t v - Destination node.
  * Returns:
- *     float - The weight between u and v.
+ *     uint32_t - The weight between u and v.
  */
-float graph_get_weight(graph_t *graph, unsigned int u, unsigned int v) {
+uint32_t graph_get_weight(graph_t *graph, uint32_t u, uint32_t v) {
     // Start and end of the row
-    unsigned int start = graph->row_index[u];
-    unsigned int end = graph->row_index[u+1];
+    uint32_t start = graph->row_index[u];
+    uint32_t end = graph->row_index[u+1];
 
     // Columns are sorted by row, so search is binary
     int l = start, h = end-1;
     while (l <= h) {
         int m = (l + h) / 2;
-        unsigned int val = graph->col_index[m];
+        uint32_t val = graph->col_index[m];
 
         if (val == v)
             return graph->values[m];
@@ -40,21 +40,21 @@ float graph_get_weight(graph_t *graph, unsigned int u, unsigned int v) {
  *
  * Arguments:
  *     graph_t *graph - Graph to query.
- *     unsigned int u - Source node.
- *     unsigned int v - Destination node.
+ *     uint32_t u - Source node.
+ *     uint32_t v - Destination node.
  * Returns:
  *     int - 1 if there is an edge, 0 otherwise.
  */
-int graph_has_edge(graph_t *graph, unsigned int u, unsigned int v) {
+int graph_has_edge(graph_t *graph, uint32_t u, uint32_t v) {
     // Start and end of row
-    unsigned int start = graph->row_index[u];
-    unsigned int end = graph->row_index[u+1];
+    uint32_t start = graph->row_index[u];
+    uint32_t end = graph->row_index[u+1];
 
     // Columns are sorted by row, so search is binary
     int l = start, h = end-1;
     while (l <= h) {
         int m = (l + h) / 2;
-        unsigned int val = graph->col_index[m];
+        uint32_t val = graph->col_index[m];
 
         if (val == v)
             return 1;
@@ -76,12 +76,12 @@ int graph_has_edge(graph_t *graph, unsigned int u, unsigned int v) {
  *     unsigned in u - Query this node.
  *     int *size - Number of neighbors will go here.
  * Returns:
- *     unsigned int * - A pointer to the adjacency list of u.
+ *     uint32_t * - A pointer to the adjacency list of u.
  */
-unsigned int *graph_get_neighbors(graph_t *graph, unsigned int u, int *size) {
+uint32_t *graph_get_neighbors(graph_t *graph, uint32_t u, int *size) {
     // Start and end of u row
-    unsigned int start = graph->row_index[u];
-    unsigned int end = graph->row_index[u+1];
+    uint32_t start = graph->row_index[u];
+    uint32_t end = graph->row_index[u+1];
     *size = (end - start);
 
     // Adjacency list
@@ -94,11 +94,11 @@ unsigned int *graph_get_neighbors(graph_t *graph, unsigned int u, int *size) {
  * Arguments:
  *     graph_iterator_t *it - The iterator to initialize.
  *     graph_t *graph - Reference graph.
- *     unsigned int node - Reference node.
+ *     uint32_t node - Reference node.
  * Returns:
  *     int - 0 on success, -1 on error.
  */
-int graph_init_iterator(graph_iterator_t *it, graph_t *graph, unsigned int node) {
+int graph_init_iterator(graph_iterator_t *it, graph_t *graph, uint32_t node) {
     // NULL checks
     if(!it || !graph) return -1;
 
@@ -116,12 +116,12 @@ int graph_init_iterator(graph_iterator_t *it, graph_t *graph, unsigned int node)
  *
  * Arguments:
  *     graph_iterator_t *it - The iterator (should be initialized).
- *     unsigned int *neighbor - Save the neighbor here (set to NULL if unwanted).
- *     float *weight - Save the weight here (set to NULL if unwanted).
+ *     uint32_t *neighbor - Save the neighbor here (set to NULL if unwanted).
+ *     uint32_t *weight - Save the weight here (set to NULL if unwanted).
  * Returns:
  *     int - 0 on success, -1 on error/end.
  */
-int graph_next_neighbor(graph_iterator_t *it, unsigned int *neighbor, float *weight) {
+int graph_next_neighbor(graph_iterator_t *it, uint32_t *neighbor, uint32_t *weight) {
     // Check for null values
     if(!it || !it->graph) return -1;
     if(it->current_index >= (it->end - it->start)) return -1;
@@ -146,14 +146,14 @@ int graph_next_neighbor(graph_iterator_t *it, unsigned int *neighbor, float *wei
  *
  * Arguments:
  *     graph_t *graph - Graph to query.
- *     unsigned int node - Query this node.
+ *     uint32_t node - Query this node.
  * Returns:
  *     size_t - The degree of node.
  */
-size_t graph_degree(graph_t *graph, unsigned int node) {
+size_t graph_degree(graph_t *graph, uint32_t node) {
     // Start and end of the row
-    unsigned int start = graph->row_index[node];
-    unsigned int end = graph->row_index[node+1];
+    uint32_t start = graph->row_index[node];
+    uint32_t end = graph->row_index[node+1];
 
     // Degree is how many non-zero values are in the row
     return (size_t)(end - start);

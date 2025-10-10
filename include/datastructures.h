@@ -9,7 +9,7 @@
 
 /* Ring-buffer implemented FIFO data structure */
 struct queue_t {
-    unsigned int    data[MAX_QUEUE_SIZE];   // Data in the queue
+    uint32_t    data[MAX_QUEUE_SIZE];   // Data in the queue
     uint64_t        front;                  // Front of the queue (pop from this)
     uint64_t        back;                   // Back of the queue (push to this)
 };
@@ -32,8 +32,8 @@ typedef struct frontier_t {
 
 /* Frontier functions */
 int frontier_init(frontier_t *frontier, frontier_type_t type);
-int frontier_push(frontier_t *frontier, unsigned int node);
-int frontier_pop(frontier_t *frontier, unsigned int *node);
+int frontier_push(frontier_t *frontier, uint32_t node);
+int frontier_pop(frontier_t *frontier, uint32_t *node);
 int frontier_empty(frontier_t *frontier);
 
 #endif

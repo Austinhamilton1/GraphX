@@ -45,7 +45,7 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         return 0;
     case BNZ:
         // BNZ is an immediate instruction
-        ARG(vm) = data & IMMEDIATE_ARG_MASK;
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
     case JMP:
         // JMP is an immediate instruction
@@ -82,6 +82,7 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
         ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
         ARG3(vm) = data & REG_CONSTANT_ARG_MASK;
+        return 0;
     case SUB:
         // SUB subtracts a register value from a register and stores it in another register
         ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
@@ -120,8 +121,8 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         return 0;
     case ST:
         // ST stores a valeu from a register to memory
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = data & CONSTANT_ARG_MASK;
+        ARG1(vm) = (data >> 3) & CONSTANT_ARG_MASK;
+        ARG2(vm) = data & REGISTER_ARG_MASK;
         return 0;
     case PUSH:
         // PUSH pushes a register to the frontier
@@ -158,6 +159,7 @@ int execute(graphX_vm_t *vm) {
     arg1 = ARG1(vm);
     arg2 = ARG2(vm);
     arg3 = ARG3(vm);
+    int comp;
 
     // Execute the inputted opcode
     switch(opcode) {
@@ -166,7 +168,7 @@ int execute(graphX_vm_t *vm) {
         return VM_HALT;
     case BZ:
         // Bounds checking
-        if(arg1 >= 8192) return VM_ERROR;
+        if(arg1 >= sizeof(vm->program) / sizeof(uint32_t)) return VM_ERROR;
         
         // Conditional check for zero
         if(FLAG_0(vm))
@@ -174,7 +176,7 @@ int execute(graphX_vm_t *vm) {
         break;
     case BNZ:
         // Bounds checking
-        if(arg1 >= 8192) return VM_ERROR;
+        if(arg1 >= sizeof(vm->program) / sizeof(uint32_t)) return VM_ERROR;
 
         // Conditional check for non-zero
         if(!FLAG_0(vm))
@@ -182,7 +184,7 @@ int execute(graphX_vm_t *vm) {
         break;
     case JMP:
         // Bounds checking
-        if(arg1 >= 8192) return VM_ERROR;
+        if(arg1 >= sizeof(vm->program) / sizeof(uint32_t)) return VM_ERROR;
 
         // Unconditional branch
         vm->PC = arg1;
@@ -213,46 +215,59 @@ int execute(graphX_vm_t *vm) {
         /* Needs to be implemented */
         break;
     case ADD:
-        
+        // Add two registers and store the result in a third register
+        vm->R[arg1] = vm->R[arg2] + vm->R[arg3];
         break;
     case ADDI:
-        
+        // Add an immediate value to a register and store it in a second register
+        vm->R[arg1] = vm->R[arg2] + arg3;
         break;
     case SUB:
-        
+        // Subtract a register from another register and store the result in a third register
+        vm->R[arg1] = vm->R[arg2] - vm->R[arg3];
         break;
     case SUBI:
-        
+        // Subtract an immediate value from a register and store it in a second register
+        vm->R[arg1] = vm->R[arg2] - arg3;
         break;
     case CMP:
-        
+        // Compare two registers and store the results in FLAGS
+        comp = vm->R[arg1] - vm->R[arg2];
+        if(comp == 0) vm->FLAGS |= 0x1;
+        else vm->FLAGS &= ~(0x1);
         break;
     case MOV:
-        
+        // Move one register to another
+        vm->R[arg1] = vm->R[arg2];
         break;
     case MOVI:
-        
+        // Move an immediate value into a register
+        vm->R[arg1] = arg2;
         break;
     case CLR:
-        
+        // Clear a register
+        vm->R[arg1] = 0;
         break;
     case LD:
-        
+        // Load a value from memory into a register
+        vm->R[arg1] = vm->memory[arg2];
         break;
     case ST:
-        
+        // Store a value from a register into memory
+        vm->memory[arg1] = vm->R[arg2];
         break;
     case PUSH:
-        
+        frontier_push(vm->frontier, vm->R[arg1]);
         break;
     case POP:
-        
+        frontier_pop(vm->frontier, &vm->R[arg1]);
         break;
     case FEMPTY:
-        
+        if(frontier_empty(vm->frontier)) vm->FLAGS |= 0x1;
+        else vm->FLAGS &= ~(0x1);
         break;
     case FSWAP:
-        
+        /* Needs to be implemented */
         break;
     default:
         return VM_ERROR;
@@ -278,11 +293,9 @@ int run(graphX_vm_t *vm) {
         if(decode(vm, data) < 0) break;
         result = execute(vm);
         if(vm->debug) {
-            printf("PC: %u, ISA=%u, R=%u\n", vm->PC, vm->ISA, vm->R);
+            printf("PC: %u, ISA=%u, FLAGS=%u iter=%u\n", vm->PC, vm->ISA, vm->FLAGS, vm->iter);
             printf("A0=%u, A1=%u, A2=%u\n", vm->A0, vm->A1, vm->A2);
-            printf("N0=%u, N1=%u, N2=%u, N3=%u\n", vm->N0, vm->N1, vm->N2, vm->N3);
-            printf("W0=%f, W1=%f, W2=%f, W3=%f\n", vm->W0, vm->W1, vm->W2, vm->W3);
-            printf("FN=%u, FW=%f\n", vm->FN, vm->FW);
+            printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u, Rtmp=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc, vm->Rtmp);
             printf("\n");
         }
     }
@@ -298,20 +311,16 @@ int run(graphX_vm_t *vm) {
  */
 void graphX_reset(graphX_vm_t *vm) {
     vm->PC = 0;
-    vm->R = 0;
+    vm->FLAGS = 0;
     vm->ISA = HALT;
     vm->A0 = 0;
     vm->A1 = 0;
     vm->A2 = 0;
-    vm->N0 = 0;
-    vm->N1 = 0;
-    vm->N2 = 0;
-    vm->N3 = 0;
-    vm->W0 = 0.0f;
-    vm->W1 = 0.0f;
-    vm->W2 = 0.0f;
-    vm->W3 = 0.0f;
-    vm->FN = 0;
-    vm->FW = 0.0f;
+    vm->Rnode = 0;
+    vm->Rval = 0;
+    vm->Rnbr = 0;
+    vm->Racc = 0;
+    vm->Rtmp = 0;
     memset(vm->memory, 0, sizeof(vm->memory));
+    frontier_init(vm->frontier, FRONTIER_QUEUE);
 }
