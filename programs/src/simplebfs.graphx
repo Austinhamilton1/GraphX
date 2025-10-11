@@ -14,7 +14,7 @@ MOVI Rtmp, 0        ; Start with the first node
 PUSH Rtmp           ; Start the frontier
 
 MOVI Racc, 1        ; Mark the first node as visited
-STR Rtmp, Racc
+STR Racc, Rtmp
 
 MOVI Racc, 65535    ; Start of BFS result (works backwards)
 
@@ -24,6 +24,7 @@ loop:
     POP Rnode       ; Get next node
     STR Rnode, Racc
     SUBI Racc, Racc, 1
+    ITER
 
 neighbor_loop:
     HASN

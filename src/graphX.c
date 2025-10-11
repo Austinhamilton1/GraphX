@@ -290,6 +290,7 @@ vm_status_t execute(graphX_vm_t *vm) {
         // Bounds check
         if(vm->R[arg2] > MEMORY_SIZE) return VM_ERROR;
         vm->memory[vm->R[arg2]] = vm->R[arg1];
+        break;
     case PUSH:
         // Push to the frontier
         frontier_push(vm->frontier, vm->R[arg1]);

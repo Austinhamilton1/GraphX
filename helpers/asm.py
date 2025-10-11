@@ -123,8 +123,6 @@ def parse_assembly(lines):
     }
     pc = 0
 
-    data_labels = {}
-
     # First pass (Resolve labels)
     for line in lines:
         # Remove comments
