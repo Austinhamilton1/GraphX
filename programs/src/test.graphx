@@ -1,5 +1,5 @@
-; Simple Test Program
-; Add the numbers 1 - 10 to the Accumulator
+;;; Simple Test Program
+;;; Add the numbers 1 - 10 to the Accumulator
 
 .code
 MOVI Rtmp, 10

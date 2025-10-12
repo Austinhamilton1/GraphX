@@ -1,5 +1,5 @@
-; Simple Memory Test
-; Read number from memory and add all numbers from 1 - that number
+;;; Simple Memory Test
+;;; Read number from memory and add all numbers from 1 - that number
 
 .mem
 0x1A ; 26 in decimal

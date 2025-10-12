@@ -119,7 +119,8 @@ def parse_assembly(lines):
         'Rval': 2,
         'Racc': 3,
         'Rtmp': 4,
-        'Rzero': 5,
+        'Rptr': 5,
+        'Rzero': 6,
     }
     pc = 0
 
@@ -204,8 +205,10 @@ def parse_assembly(lines):
                 data['values'].append(int(token, 0))
 
         elif section == '.mem':
-            # Allow decimal or hex
-            mem.append(int(line, 0))
+            tokens = re.split(r'[,\s]+', line)
+            for token in tokens:
+                # Allow decimal or hex
+                mem.append(int(token, 0))
 
     return code, data, mem
 

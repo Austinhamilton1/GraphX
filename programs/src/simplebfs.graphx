@@ -1,29 +1,31 @@
-; Simple BFS on a very small toy graph
+;;; Simple BFS on a very small toy graph
 
 .row_index
-0, 2, 5, 8, 10, 12
+0, 2, 4, 8, 9, 10
 
 .col_index
-1, 2, 0, 2, 3, 0, 1, 4, 1, 4, 2, 3
+1, 2, 0, 2, 0, 1, 3, 4, 2, 2
 
 .values
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 
 .code
-MOVI Rtmp, 0        ; Start with the first node
-PUSH Rtmp           ; Start the frontier
+MOVI Rptr, 0        ; Start with the first node
+PUSH Rptr           ; Start the frontier
 
-MOVI Racc, 1        ; Mark the first node as visited
-STR Racc, Rtmp
+MOVI Rtmp, 1        ; Mark the first node as visited
+STR Rtmp, Rptr
 
-MOVI Racc, 65535    ; Start of BFS result (works backwards)
+MOVI Rptr, 65535    ; Start of BFS result (works backwards)
+
+FSWAP               ; Swap the frontiers
 
 loop:
     FEMPTY
-    BZ done
+    BZ next_level
     POP Rnode       ; Get next node
-    STR Rnode, Racc
-    SUBI Racc, Racc, 1
+    STR Rnode, Rptr
+    SUBI Rptr, Rptr, 1
     ITER
 
 neighbor_loop:
@@ -42,6 +44,13 @@ neighbor_loop:
 
     PUSH Rnbr       ; Add to frontier
     JMP neighbor_loop
+
+next_level:
+    ; Swap the Queues and check if the next queue is also empty
+    FSWAP
+    FEMPTY
+    BZ done
+    JMP loop    ; If the other queue is not empty, jump back to the main loop
 
 done:
     HALT

@@ -48,11 +48,12 @@ int main(int argc, char **argv) {
     // Initialize the VM
     graph_t g = {0};
     frontier_t f = {0};
-    frontier_init(&f, FRONTIER_QUEUE);
+    frontier_t n = {0};
 
     graphX_vm_t vm = {0};
     vm.graph = &g;
     vm.frontier = &f;
+    vm.next_frontier = &n;
     vm.debug = (argc > 2 && strcmp(argv[2], "--debug") == 0 ? debug : 0);
 
     // Load the binary instruction
@@ -165,11 +166,16 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
  */
 void debug(graphX_vm_t *vm) {
     printf("PC=%u, ISA=%s, FLAGS=%u, iter=%u\n", vm->PC, opcodes[vm->ISA], vm->FLAGS, vm->iter);
-    printf("Rnode=%u, Rnbr=%u, Racc=%u, Rtmp=%u\n", vm->Rnode, vm->Rnbr, vm->Racc, vm->Rtmp);
+    printf("Rnode=%u, Rnbr=%u, Racc=%u, Rtmp=%u, Rptr=%u\n", vm->Rnode, vm->Rnbr, vm->Racc, vm->Rtmp, vm->Rptr);
     printf("Frontier:\n");
     printf("Front=%lu, Back=%lu\n", vm->frontier->backend.queue.front, vm->frontier->backend.queue.back);
     for(int i = 0; i < 10; i++)
         printf("%u ", vm->frontier->backend.queue.data[i]);
+    printf("...\n");
+    printf("Next frontier:\n");
+    printf("Front=%lu, Back=%lu\n", vm->next_frontier->backend.queue.front, vm->next_frontier->backend.queue.back);
+    for(int i = 0; i < 10; i++)
+        printf("%u ", vm->next_frontier->backend.queue.data[i]);
     printf("...\n");
     printf("Memory:\n");
     for(int i = 0; i < 10; i++)

@@ -38,12 +38,12 @@ typedef enum {
     HASE,       // Check if there is an edge between Rnode and input node
     
     /* Arithmetic and logic*/
-    ADD,        // Add edge weight
-    ADDI,       // Add immediate value
-    SUB,        // Subtract edge weight,
-    SUBI,       // Subtract immediate value
+    ADD,        // Add two registers
+    ADDI,       // Add immediate value to register
+    SUB,        // Subtract two registers,
+    SUBI,       // Subtract immediate value from register
     CMP,        // Compare, set FLAGS
-    MOV,        // Move
+    MOV,        // Move register
     MOVI,       // Move immediate
     CLR,        // Zero register
 
@@ -66,6 +66,7 @@ typedef enum {
     R_VAL,
     R_ACC,
     R_TMP,
+    R_PTR,
     R_ZERO,
     R_COUNT,
 } reg;
@@ -88,6 +89,7 @@ typedef struct graphX_vm_t {
             uint32_t    Rval;                   // Weight value
             uint32_t    Racc;                   // Accumulator register
             uint32_t    Rtmp;                   // Temporary register
+            uint32_t    Rptr;                   // Temporary register for pointers
             uint32_t    Rzero;                  // Zero register
         };
         uint32_t        R[R_COUNT];             // Register indexer
@@ -98,7 +100,8 @@ typedef struct graphX_vm_t {
     uint32_t            memory[MEMORY_SIZE];    // Memory
     uint32_t            iter;                   // Iterator index
     graph_t             *graph;                 // Graph data structure
-    frontier_t          *frontier;              // Frontier if needed
+    frontier_t          *frontier;        // Frontier for graph exploration
+    frontier_t          *next_frontier;         // Back frontier buffer (used for level-synchronicity)
 
     /* Debug hook */
     void                (*debug)(struct graphX_vm_t *);

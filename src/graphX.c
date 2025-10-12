@@ -292,8 +292,8 @@ vm_status_t execute(graphX_vm_t *vm) {
         vm->memory[vm->R[arg2]] = vm->R[arg1];
         break;
     case PUSH:
-        // Push to the frontier
-        frontier_push(vm->frontier, vm->R[arg1]);
+        // Push to the next frontier
+        frontier_push(vm->next_frontier, vm->R[arg1]);
         break;
     case POP:
         // Pop from the frontier
@@ -308,7 +308,12 @@ vm_status_t execute(graphX_vm_t *vm) {
             vm->FLAGS &= ~FLAG_ZERO;
         break;
     case FSWAP:
-        /* Needs to be implemented */
+        // Swap the back and front frontiers
+        frontier_t *tmp = vm->frontier;
+        vm->frontier = vm->next_frontier;
+        vm->next_frontier = tmp;
+
+        frontier_init(vm->next_frontier, vm->frontier->type);
         break;
     default:
         return VM_ERROR;
@@ -363,4 +368,6 @@ void graphX_reset(graphX_vm_t *vm) {
     memset(vm->memory, 0, sizeof(vm->memory));
     if(vm->frontier)
         frontier_init(vm->frontier, FRONTIER_QUEUE);
+    if(vm->next_frontier)
+        frontier_init(vm->next_frontier, FRONTIER_QUEUE);
 }

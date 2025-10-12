@@ -23,9 +23,9 @@ class Graph:
     def __str__(self):
         '''Print the graph in graphX ASM format'''
         result = ''
-        result += f'.row_index\n{", ".join(map(str, self.row_index))}\n'
-        result += f'.col_index\n{", ".join(map(str, self.col_index))}\n'
-        result += f'.values\n{", ".join(map(str, self.values))}\n'
+        result += f'.row_index\n{", ".join(map(str, self.row_index))}\n\n'
+        result += f'.col_index\n{", ".join(map(str, self.col_index))}\n\n'
+        result += f'.values\n{", ".join(map(str, self.values))}\n\n'
         return result
 
 

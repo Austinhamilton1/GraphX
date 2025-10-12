@@ -7,7 +7,7 @@ CFLAGS=-Wall -I$(INC) -g
 
 TARGETS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(wildcard $(SRC)/*.c))
 
-.PHONY: all clean
+.PHONY: all clean install uninstall
 
 all: $(BIN)/graphX
 
@@ -26,3 +26,9 @@ $(BIN):
 clean: $(BIN) $(OBJ)
 	rm -rf $(BIN)
 	rm -rf $(OBJ)
+
+install: $(BIN)/graphX
+	cp $(BIN)/graphX /usr/local/bin
+
+uninstall:
+	rm /usr/local/bin/graphX
