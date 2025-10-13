@@ -8,7 +8,10 @@
 int graphX_load(graphX_vm_t *vm, const char *filename);
 
 /* Debug hook */
-void debug(graphX_vm_t *vm);
+void debug_hook(graphX_vm_t *vm);
+
+/* Exit call back */
+void exit_hook(graphX_vm_t *vm, int result);
 
 static const char *opcodes[] = {
     "HALT",
@@ -16,14 +19,11 @@ static const char *opcodes[] = {
     "BNZ",
     "BLT",
     "BGT",
-    "JMP",
-    "LDN",    
+    "JMP",    
     "NITER",     
     "NNEXT",
     "EITER",
-    "ENEXT",     
-    "LDV",      
-    "HASN",      
+    "ENEXT",      
     "HASE", 
     "ADD",       
     "ADDI",    
@@ -31,8 +31,7 @@ static const char *opcodes[] = {
     "SUBI",   
     "CMP",   
     "MOV", 
-    "MOVI",
-    "CLR", 
+    "MOVI", 
     "LD",  
     "ST",  
     "LDR", 
@@ -58,7 +57,8 @@ int main(int argc, char **argv) {
     vm.graph = &g;
     vm.frontier = &f;
     vm.next_frontier = &n;
-    vm.debug = (argc > 2 && strcmp(argv[2], "--debug") == 0 ? debug : 0);
+    vm.debug_hook = (argc > 2 && strcmp(argv[2], "--debug") == 0 ? debug_hook : 0);
+    vm.exit_hook = exit_hook;
 
     // Load the binary instruction
     if(graphX_load(&vm, argv[1]) < 0) {
@@ -67,8 +67,7 @@ int main(int argc, char **argv) {
     }
 
     // Run the instructions on the VM and check for result
-    int result = run(&vm);
-    printf("VM exited with code: %d\n", result);
+    run(&vm);
 
     return 0;
 }
@@ -167,9 +166,9 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
  * Debug hook for the graphX VM.
  *
  * Arguments:
- *    graphX_vm_t *vm - The VM to hook into.
+ *     graphX_vm_t *vm - The VM to hook into.
  */
-void debug(graphX_vm_t *vm) {
+void debug_hook(graphX_vm_t *vm) {
     printf("PC=%u, ISA=%s, FLAGS=%u, niter=%u, eiter=%u\n", vm->PC, opcodes[vm->ISA], vm->FLAGS, vm->niter, vm->eiter);
     printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u, Rtmp=%u, Rptr=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc, vm->Rtmp, vm->Rptr);
     printf("Frontier:\n");
@@ -189,4 +188,31 @@ void debug(graphX_vm_t *vm) {
     for(int i = 10; i > 0; i--)
         printf("%u ", vm->memory[65536-i]);
     printf("\n");
+    getchar();
+}
+
+/*
+ * Exit callback for the graphX VM.
+ *
+ * Arguments:
+ *     graphX_vm_t *vm - The VM to callback from.
+ *     int result - The result code of the execution.
+ */
+void exit_hook(graphX_vm_t *vm, int result) {
+    if(result == VM_HALT) {
+        printf("VM execution succeeded.\n");
+        printf("Memory at end of program:\n");
+        printf("\n");
+        for(int i = 0; i < 256; i++) {
+            for(int j = 0; j < 256; j++) {
+                printf("%u ", vm->memory[(256*i) + j]);
+            }
+            printf("\n");
+        }
+    } else if(result == VM_ERROR) {
+        printf("VM execution failed.\n");
+        vm->PC--; // Get the last executed instruction
+        printf("Execution failed on PC=%u.\n", vm->PC);
+        printf("Inst=%s, A0=%u, A1=%u, A2=%u.\n", opcodes[(vm->program[vm->PC] >> 27) & 0x1F], vm->A0, vm->A1, vm->A2);
+    }
 }

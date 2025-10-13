@@ -32,13 +32,10 @@ typedef enum {
     JMP,        // Unconditional jump
 
     /* Graph access instructions */
-    LDN,        // Load node into Rnode
     NITER,      // Initialize neighbor iteration
     NNEXT,      // Load next neighbor into Rnbr
     EITER,      // Initialize edge iteration
     ENEXT,      // Load next edge
-    LDV,        // Load edge weight into Rval
-    HASN,       // Check if more neighbors exist
     HASE,       // Check if there is an edge between Rnode and input node
     
     /* Arithmetic and logic*/
@@ -49,7 +46,6 @@ typedef enum {
     CMP,        // Compare, set FLAGS
     MOV,        // Move register
     MOVI,       // Move immediate
-    CLR,        // Zero register
 
     /* Memory access */
     LD,         // Load register from memory
@@ -109,7 +105,10 @@ typedef struct graphX_vm_t {
     frontier_t          *next_frontier;         // Back frontier buffer (used for level-synchronicity)
 
     /* Debug hook */
-    void                (*debug)(struct graphX_vm_t *);
+    void                (*debug_hook)(struct graphX_vm_t *);
+
+    /* Exit hook */
+    void                (*exit_hook)(struct graphX_vm_t *, int);
 } graphX_vm_t;
 
 /* Functions needed to run instructions */

@@ -29,9 +29,8 @@ loop:
 neighbor_loop:
     ; Check for neighbors, if there are no more neighbors ;
     ; jump back to the loop ;
-    HASN
-    BZ loop
     NNEXT                ; Get neighbor
+    BZ loop
 
     ; Check if visited ;
     LDR Rtmp, Rnbr

@@ -30,30 +30,26 @@ OPCODES = {
     'BLT': 3,       # Branch if less than
     'BGT': 4,       # Branch if greater than
     'JMP': 5,       # Unconditional jump
-    'LDN': 6,       # Load node into Rnode
-    'NITER': 7,     # Initialize neighbor iteration
-    'NNEXT': 8,     # Load next neighbor into Rnbr
-    'EITER': 9,     # Initialize edge iteration     
-    'ENEXT': 10,    # Load next edge into Rnode, Rnbr, Rval
-    'LDV': 11,      # Load edge weight into Rval
-    'HASN': 12,     # Check if more neighbors exist
-    'HASE': 13,     # Check if there is an edge between Rnode and input node
-    'ADD': 14,      # Add edge weight
-    'ADDI': 15,     # Add immediate value
-    'SUB': 16,      # Subtract edge weight,
-    'SUBI': 17,     # Subtract immediate value
-    'CMP': 18,      # Compare, set FLAGS
-    'MOV': 19,      # Move
-    'MOVI': 20,     # Move immediate
-    'CLR': 21,      # Zero register
-    'LD': 22,       # Load register from memory
-    'ST': 23,       # Store register to memory
-    'LDR': 24,      # Load from register address
-    'STR': 25,      # Store to register address
-    'PUSH': 26,     # Add neighbor to next frontier
-    'POP': 27,      # Load next node from frontier
-    'FEMPTY': 28,   # Check if frontier is empty
-    'FSWAP': 29,    # Swap next frontier and current frontier buffers
+    'NITER': 6,     # Initialize neighbor iteration
+    'NNEXT': 7,     # Load next neighbor into Rnbr
+    'EITER': 8,     # Initialize edge iteration     
+    'ENEXT': 9,     # Load next edge into Rnode, Rnbr, Rval
+    'HASE': 10,     # Check if there is an edge between Rnode and input node
+    'ADD': 11,      # Add edge weight
+    'ADDI': 12,     # Add immediate value
+    'SUB': 13,      # Subtract edge weight,
+    'SUBI': 14,     # Subtract immediate value
+    'CMP': 15,      # Compare, set FLAGS
+    'MOV': 16,      # Move
+    'MOVI': 17,     # Move immediate
+    'LD': 18,       # Load register from memory
+    'ST': 19,       # Store register to memory
+    'LDR': 20,      # Load from register address
+    'STR': 21,      # Store to register address
+    'PUSH': 22,     # Add neighbor to next frontier
+    'POP': 23,      # Load next node from frontier
+    'FEMPTY': 24,   # Check if frontier is empty
+    'FSWAP': 25,    # Swap next frontier and current frontier buffers
 }
 
 def encode_instruction(op, args):
@@ -65,11 +61,11 @@ def encode_instruction(op, args):
     opcode = OPCODES[op] << 27
 
     # No argument operations
-    if op in ['HALT', 'NITER', 'NNEXT', 'EITER', 'ENEXT', 'LDV', 'HASN', 'FEMPTY', 'FSWAP']:
+    if op in ['HALT', 'NITER', 'NNEXT', 'EITER', 'ENEXT', 'FEMPTY', 'FSWAP']:
         return opcode
     
     # Immediate operations
-    elif op in ['BZ', 'BNZ', 'BLT', 'BGT', 'JMP', 'LDN', 'HASE']:
+    elif op in ['BZ', 'BNZ', 'BLT', 'BGT', 'JMP', 'HASE']:
         imm = int(args[0]) & IMMEDIATE_ARG_MASK
         return opcode | imm
     
@@ -100,7 +96,7 @@ def encode_instruction(op, args):
         return opcode | (r << 24) | const
 
     # Register operations
-    elif op in ['CLR', 'PUSH', 'POP']:
+    elif op in ['PUSH', 'POP']:
         r = int(args[0]) & REGISTER_ARG_MASK
         return opcode | (r << 24)
 

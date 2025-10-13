@@ -31,6 +31,11 @@ uint32_t fetch(graphX_vm_t *vm) {
  *     int - 0 on sucess -1 on error.
  */
 int decode(graphX_vm_t *vm, uint32_t data) {
+    // Zero out arguments
+    ARG1(vm) = 0;
+    ARG2(vm) = 0;
+    ARG3(vm) = 0;
+
     // Opcode is stored in most significant 5 bits
     vm->ISA = (data >> 27) & 0x1F;
 
@@ -59,10 +64,6 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         // JMP is an immediate instruction
         ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
-    case LDN:
-        // LDN is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case NITER:
         // NITER takes no arguments
         return 0;
@@ -74,12 +75,6 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         return 0;
     case ENEXT:
         // ENEXT takes no arguments
-        return 0;
-    case LDV:
-        // LDV doesn't take any arguments
-        return 0;
-    case HASN:
-        // HASN doesn't take any arguments
         return 0;
     case HASE:
         // HASE is an immediate instruction
@@ -123,10 +118,6 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         // MOVI moves a constant value into a register
         ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
         ARG2(vm) = data & CONSTANT_ARG_MASK;
-        return 0;
-    case CLR:
-        // CLR sets the value of a register to 0
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
         return 0;
     case LD:
         // LD loads a value from memory to a register
@@ -228,10 +219,6 @@ vm_status_t execute(graphX_vm_t *vm) {
         // Unconditional branch
         vm->PC = arg1;
         break;
-    case LDN:
-        // Load in argument into register
-        vm->Rnode = arg1;
-        break;
     case NITER:
         // Initialize the internal iterator
         vm->niter = 0;
@@ -240,8 +227,11 @@ vm_status_t execute(graphX_vm_t *vm) {
         // Reset flags
         vm->FLAGS = 0;
         // Get the next neighbor
-        if(vm->graph->row_index[vm->Rnode] + vm->niter < vm->graph->row_index[vm->Rnode+1])
-            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter++];
+        if(vm->graph->row_index[vm->Rnode] + vm->niter < vm->graph->row_index[vm->Rnode+1]) {
+            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter];
+            vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter];
+            vm->niter++;
+        }
         else
             vm->FLAGS |= FLAG_ZERO; // Signal done
         break;
@@ -255,13 +245,13 @@ vm_status_t execute(graphX_vm_t *vm) {
         vm->FLAGS = 0;
 
         // End of row, go to next populated column
-        while(vm->Rnode < vm->graph->n && vm->graph->row_index[vm->Rnode] + vm->eiter >= vm->graph->row_index[vm->Rnode+1]) {
+        if(vm->Rnode < vm->graph->n && vm->graph->row_index[vm->Rnode] + vm->eiter >= vm->graph->row_index[vm->Rnode+1]) {
             vm->Rnode++;
             vm->eiter = 0;
         }
         
         // Bounds check
-        if(vm->Rnode >= vm->graph->n) {
+        if(vm->Rnode + vm->eiter >= vm->graph->n) {
             vm->FLAGS |= FLAG_ZERO; // Signal done
             break;
         }
@@ -272,16 +262,6 @@ vm_status_t execute(graphX_vm_t *vm) {
 
         // Advance iterator
         vm->eiter++;
-        break;
-    case LDV:
-        // Get the weight between the current node and the next neighbor
-        vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter-1];
-        break;
-    case HASN:
-        // Check if the current node has any more neighbors
-        vm->FLAGS = 0;
-        if(vm->graph->row_index[vm->Rnode] + vm->niter >= vm->graph->row_index[vm->Rnode+1])
-            vm->FLAGS |= FLAG_ZERO;
         break;
     case HASE:
         // Check if there is an edge between two nodes (binary search)
@@ -321,10 +301,6 @@ vm_status_t execute(graphX_vm_t *vm) {
     case MOVI:
         // Move an immediate value into a register
         vm->R[arg1] = arg2;
-        break;
-    case CLR:
-        // Clear a register
-        vm->R[arg1] = 0;
         break;
     case LD:
         // Load a value from memory into a register
@@ -395,11 +371,16 @@ vm_status_t run(graphX_vm_t *vm) {
     // Fetch, decode, execute pipeline
     while(result == VM_CONTINUE) {
         uint32_t data = fetch(vm);
-        if(data == VM_HALT) return VM_HALT;
+        if(data == VM_HALT) {
+            result = VM_HALT;
+            break;
+        }
         if(decode(vm, data) < 0) return VM_ERROR;
         result = execute(vm);
-        if(vm->debug) vm->debug(vm);
+        if(vm->debug_hook) vm->debug_hook(vm);
     }
+
+    if(vm->exit_hook) vm->exit_hook(vm, result);
 
     return result;
 }

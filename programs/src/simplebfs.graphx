@@ -29,9 +29,8 @@ loop:
     NITER
 
 neighbor_loop:
-    HASN
-    BZ loop
     NNEXT            ; Get neighbor
+    BZ loop
 
     ; Check if visited
     LDR Rtmp, Rnbr  ; visited[neighbor]
