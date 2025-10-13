@@ -27,12 +27,16 @@ typedef enum {
     HALT = 0,   // End of program
     BZ,         // Conditional branch if zero
     BNZ,        // Conditional branch if not zero
+    BLT,        // Conditional branch if less than
+    BGT,        // Conditional branch if greater than
     JMP,        // Unconditional jump
 
     /* Graph access instructions */
     LDN,        // Load node into Rnode
-    ITER,       // Initialize neighbor iteration
-    NEXT,       // Load next neighbor into Rnbr
+    NITER,      // Initialize neighbor iteration
+    NNEXT,      // Load next neighbor into Rnbr
+    EITER,      // Initialize edge iteration
+    ENEXT,      // Load next edge
     LDV,        // Load edge weight into Rval
     HASN,       // Check if more neighbors exist
     HASE,       // Check if there is an edge between Rnode and input node
@@ -98,9 +102,10 @@ typedef struct graphX_vm_t {
     /* Memory */
     uint32_t            program[PROGRAM_SIZE];  // Instructions to run
     uint32_t            memory[MEMORY_SIZE];    // Memory
-    uint32_t            iter;                   // Iterator index
+    uint32_t            niter;                  // Node iterator index
+    uint32_t            eiter;                  // Edge iterator index
     graph_t             *graph;                 // Graph data structure
-    frontier_t          *frontier;        // Frontier for graph exploration
+    frontier_t          *frontier;              // Frontier for graph exploration
     frontier_t          *next_frontier;         // Back frontier buffer (used for level-synchronicity)
 
     /* Debug hook */

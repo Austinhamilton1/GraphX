@@ -26,12 +26,12 @@ loop:
     POP Rnode       ; Get next node
     STR Rnode, Rptr
     SUBI Rptr, Rptr, 1
-    ITER
+    NITER
 
 neighbor_loop:
     HASN
     BZ loop
-    NEXT            ; Get neighbor
+    NNEXT            ; Get neighbor
 
     ; Check if visited
     LDR Rtmp, Rnbr  ; visited[neighbor]

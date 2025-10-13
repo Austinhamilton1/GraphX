@@ -47,6 +47,14 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         // BNZ is an immediate instruction
         ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
+    case BLT:
+        // BLT is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
+        return 0;
+    case BGT:
+        // BGT is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
+        return 0;
     case JMP:
         // JMP is an immediate instruction
         ARG1(vm) = data & IMMEDIATE_ARG_MASK;
@@ -55,11 +63,17 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         // LDN is an immediate instruction
         ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
-    case ITER:
-        // ITER takes no arguments
+    case NITER:
+        // NITER takes no arguments
         return 0;
-    case NEXT:
-        // NEXT doesn't take any arguments
+    case NNEXT:
+        // NNEXT doesn't take any arguments
+        return 0;
+    case EITER:
+        // EITER takes no arguments
+        return 0;
+    case ENEXT:
+        // ENEXT takes no arguments
         return 0;
     case LDV:
         // LDV doesn't take any arguments
@@ -192,6 +206,21 @@ vm_status_t execute(graphX_vm_t *vm) {
         if(!(vm->FLAGS & FLAG_ZERO))
             vm->PC = arg1;        
         break;
+    case BLT:
+        // Bounds checking
+        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
+
+        // Conditional check for less than
+        if(vm->FLAGS & FLAG_NEG)
+            vm->PC = arg1;
+        break;
+    case BGT:
+        // Bounds checking
+        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
+
+        // Conditional check for greater than
+        if(vm->FLAGS & FLAG_POS)
+            vm->PC = arg1;
     case JMP:
         // Bounds checking
         if(arg1 >= MEMORY_SIZE) return VM_ERROR;
@@ -203,25 +232,55 @@ vm_status_t execute(graphX_vm_t *vm) {
         // Load in argument into register
         vm->Rnode = arg1;
         break;
-    case ITER:
+    case NITER:
         // Initialize the internal iterator
-        vm->iter = 0;
+        vm->niter = 0;
         break;
-    case NEXT:
+    case NNEXT:
+        // Reset flags
+        vm->FLAGS = 0;
         // Get the next neighbor
-        if(vm->graph->row_index[vm->Rnode] + vm->iter < vm->graph->row_index[vm->Rnode+1])
-            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->iter++];
+        if(vm->graph->row_index[vm->Rnode] + vm->niter < vm->graph->row_index[vm->Rnode+1])
+            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter++];
         else
             vm->FLAGS |= FLAG_ZERO; // Signal done
         break;
+    case EITER:
+        // Initialize the internal iterator and start node
+        vm->eiter = 0;
+        vm->Rnode = 0;
+        break;
+    case ENEXT:
+        // Reset flags
+        vm->FLAGS = 0;
+
+        // End of row, go to next populated column
+        while(vm->Rnode < vm->graph->n && vm->graph->row_index[vm->Rnode] + vm->eiter >= vm->graph->row_index[vm->Rnode+1]) {
+            vm->Rnode++;
+            vm->eiter = 0;
+        }
+        
+        // Bounds check
+        if(vm->Rnode >= vm->graph->n) {
+            vm->FLAGS |= FLAG_ZERO; // Signal done
+            break;
+        }
+
+        // Get current edge
+        vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->eiter];
+        vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->eiter];
+
+        // Advance iterator
+        vm->eiter++;
+        break;
     case LDV:
         // Get the weight between the current node and the next neighbor
-        vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->iter-1];
+        vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter-1];
         break;
     case HASN:
         // Check if the current node has any more neighbors
         vm->FLAGS = 0;
-        if(vm->graph->row_index[vm->Rnode] + vm->iter >= vm->graph->row_index[vm->Rnode+1])
+        if(vm->graph->row_index[vm->Rnode] + vm->niter >= vm->graph->row_index[vm->Rnode+1])
             vm->FLAGS |= FLAG_ZERO;
         break;
     case HASE:
@@ -364,7 +423,8 @@ void graphX_reset(graphX_vm_t *vm) {
     vm->Racc = 0;
     vm->Rtmp = 0;
     vm->Rzero = 0;
-    vm->iter = 0;
+    vm->niter = 0;
+    vm->eiter = 0;
     memset(vm->memory, 0, sizeof(vm->memory));
     if(vm->frontier)
         frontier_init(vm->frontier, FRONTIER_QUEUE);

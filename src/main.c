@@ -14,10 +14,14 @@ static const char *opcodes[] = {
     "HALT",
     "BZ",
     "BNZ",
+    "BLT",
+    "BGT",
     "JMP",
     "LDN",    
-    "ITER",     
-    "NEXT",     
+    "NITER",     
+    "NNEXT",
+    "EITER",
+    "ENEXT",     
     "LDV",      
     "HASN",      
     "HASE", 
@@ -128,6 +132,7 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
     }
 
     // Load graph
+    vm->graph->n = col_index_len;
     if(row_index_len > 0 && fread(vm->graph->row_index, sizeof(uint32_t), row_index_len, f) != row_index_len) {
         fprintf(stderr, "Error: failed to read row index section\n");
         fclose(f);
@@ -165,8 +170,8 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
  *    graphX_vm_t *vm - The VM to hook into.
  */
 void debug(graphX_vm_t *vm) {
-    printf("PC=%u, ISA=%s, FLAGS=%u, iter=%u\n", vm->PC, opcodes[vm->ISA], vm->FLAGS, vm->iter);
-    printf("Rnode=%u, Rnbr=%u, Racc=%u, Rtmp=%u, Rptr=%u\n", vm->Rnode, vm->Rnbr, vm->Racc, vm->Rtmp, vm->Rptr);
+    printf("PC=%u, ISA=%s, FLAGS=%u, niter=%u, eiter=%u\n", vm->PC, opcodes[vm->ISA], vm->FLAGS, vm->niter, vm->eiter);
+    printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u, Rtmp=%u, Rptr=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc, vm->Rtmp, vm->Rptr);
     printf("Frontier:\n");
     printf("Front=%lu, Back=%lu\n", vm->frontier->backend.queue.front, vm->frontier->backend.queue.back);
     for(int i = 0; i < 10; i++)

@@ -1,5 +1,6 @@
 # import re
 import pygame
+import math
 
 class Graph:
     def __init__(self, graph_matrix: list[list[float]]) -> None:
@@ -31,7 +32,7 @@ class Graph:
 def main():
     # Nodes and edges are just stored as a list of tuples
     # Nodes are (x, y)
-    # Edges are (node_1, node_2, weight)
+    # Edges are (node_1, node_2, weight, direction)
     nodes = []
     edges = []
 
@@ -72,9 +73,14 @@ def main():
         '''Convert the nodes and edges to an adjacency matrix'''
         n = len(nodes)
         matrix = [[0 for _ in range(n)] for _ in range(n)]
-        for a, b, w in edges:
-            matrix[a][b] = w
-            matrix[b][a] = w
+        for a, b, w, direction in edges:
+            if direction == 0:
+                matrix[a][b] = w
+                matrix[b][a] = w
+            elif direction == 1:
+                matrix[a][b] = w
+            else:
+                matrix[b][a] = w
 
         return matrix
     
@@ -97,7 +103,7 @@ def main():
         '''Find the closest edge to a position'''
         min_edge = -1
         min_dist = float('inf')
-        for i, (a, b, _) in enumerate(edges):
+        for i, (a, b, _, _) in enumerate(edges):
             a = nodes[a]
             b = nodes[b]
             dist = dist_to_line((x, y), a, b)
@@ -126,7 +132,7 @@ def main():
                         # Done entering weight
                         popup_active = False
                         e = edges[current_edge]
-                        edges[current_edge] = (e[0], e[1], int(weight_text))
+                        edges[current_edge] = (e[0], e[1], int(weight_text), e[3])
                     elif event.key == pygame.K_BACKSPACE:
                         # Backspace input
                         weight_text = weight_text[:-1]
@@ -161,7 +167,7 @@ def main():
                             # Drag from one node to another
                             end = i
                             if start >= 0 and end >= 0:
-                                edges.append((start, end, 1))
+                                edges.append((start, end, 1, 0))
                                 start, end = -1, -1
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_s:
@@ -174,13 +180,38 @@ def main():
                         current_edge = closest_edge(*pygame.mouse.get_pos())
                         weight_text = ''
                         popup_active = True
+                    elif event.key == pygame.K_e:
+                        # Toggle edge from undirected to directed
+                        e = closest_edge(*pygame.mouse.get_pos())
+                        edge = edges[e]
+                        new_direction = ((edge[3] + 2) % 3) - 1
+                        edges[e] = (edge[0], edge[1], edge[2], new_direction)
         
         # White background
         screen.fill((255, 255, 255))
 
         # Draw the edges first so the nodes show up in front of them
-        for a, b, w in edges:
+        for a, b, w, d in edges:
             pygame.draw.line(screen, (0, 0, 0), nodes[a], nodes[b], 2)
+
+            # Check for direction
+            if d > 0:
+                dest = nodes[b]
+                src = nodes[a]
+            elif d < 0:
+                dest = nodes[a]
+                src = nodes[b]
+            else:
+                dest = None
+                src = None
+
+            if dest is not None and src is not None:            
+                # Destination to source vector (point back)
+                vec = (src[0] - dest[0], src[1] - dest[1])
+                
+                # Calculate center
+                center = (dest[0] + 0.4*vec[0], dest[1] + 0.4*vec[1])
+                pygame.draw.circle(screen, (255, 0, 0), center, 5)
 
             # Put the edge weight on the center of the line
             line_center = ((nodes[a][0] + nodes[b][0]) // 2, (nodes[a][1] + nodes[b][1]) // 2)

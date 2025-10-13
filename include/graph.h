@@ -7,8 +7,7 @@
 
 /* Represents a graph (compressed sparse row format) */
 typedef struct graph_t {
-    uint32_t    m;              // Rows
-    uint32_t    n;              // Columns
+    uint32_t    n;              // nodes
     uint32_t    col_index[MAX]; // Index of value in columna
     uint32_t    row_index[MAX]; // Index of value in rows
     uint32_t    values[MAX];    // Value (weights)
