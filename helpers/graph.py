@@ -53,7 +53,7 @@ def main():
         '''Spatial hash function'''
         # The spatial hash is squares of 100*100 pixels flattened into a singular array
         # This is a basic spatial hash function for that setup
-        return y // 100 + x // 200
+        return (1000 // 100)*(y // 100) + x // 100
 
     def intersect_point(x, y):
         '''Get an intersecting node if it exists'''
@@ -118,7 +118,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((2000, 1000))
     running = True
-    font = pygame.font.SysFont('Arial', 12)
+    font = pygame.font.SysFont('Arial', 15)
 
     while running:
         '''Event loop'''
@@ -215,8 +215,9 @@ def main():
 
             # Put the edge weight on the center of the line
             line_center = ((nodes[a][0] + nodes[b][0]) // 2, (nodes[a][1] + nodes[b][1]) // 2)
-            text_surface = font.render(str(w), True, (75, 75, 75))
+            text_surface = font.render(str(w), True, (0, 0, 0))
             text_rect = text_surface.get_rect(center=line_center)
+            pygame.draw.rect(screen, (255, 255, 255), text_rect)
             screen.blit(text_surface, text_rect)
 
         # If the user is currently drawing an edge draw the edge as it's created
