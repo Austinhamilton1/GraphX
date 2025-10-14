@@ -213,6 +213,7 @@ vm_status_t execute(graphX_vm_t *vm) {
         // Conditional check for greater than
         if(vm->FLAGS & FLAG_POS)
             vm->PC = arg1;
+        break;
     case JMP:
         // Bounds checking
         if(arg1 >= MEMORY_SIZE) return VM_ERROR;
@@ -271,9 +272,9 @@ vm_status_t execute(graphX_vm_t *vm) {
     case HASE:
         // Check if there is an edge between two nodes (binary search)
         // You can branch with BNZ after this
-        vm->FLAGS = 0;
+        vm->FLAGS = FLAG_ZERO;
         if(graph_has_edge(vm->graph, vm->Rnode, vm->Rnbr))
-            vm->FLAGS |= FLAG_ZERO;
+            vm->FLAGS &= ~(FLAG_ZERO);
         break;
     case ADD:
         // Add two registers and store the result in a third register
@@ -294,7 +295,7 @@ vm_status_t execute(graphX_vm_t *vm) {
     case CMP:
         // Compare two registers and store the results in FLAGS
         vm->FLAGS = 0;
-        comp = vm->R[arg1] - vm->R[arg2];
+        comp = (int)vm->R[arg1] - (int)vm->R[arg2];
         if(comp == 0) vm->FLAGS |= FLAG_ZERO;
         else if(comp < 0) vm->FLAGS |= FLAG_NEG;
         else vm->FLAGS |= FLAG_POS;

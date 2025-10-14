@@ -7,8 +7,8 @@ MOVI Rptr, 0        ; Memory pointer
 
 loop:
     ; Write to all memory cells then try one out of bounds ;
-    MOVI Rtmp, 1
-    STR Rtmp, Rptr
+    MOVI Rtmp1, 1
+    STR Rtmp1, Rptr
     CMP Racc, Rzero
     BZ done
     ADDI Rptr, Rptr, 1

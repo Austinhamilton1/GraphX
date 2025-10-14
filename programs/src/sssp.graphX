@@ -4,8 +4,8 @@
 ;;; will be stored in memory[i].
 
 .code
-LD Rtmp, 65535              ; Load in the source node
-STR Rzero, Rtmp             ; Store a zero in the first distance (initialization)
+LD Rtmp1, 65535              ; Load in the source node
+STR Rzero, Rtmp1             ; Store a zero in the first distance (initialization)
 
 MOVI Racc, 5                ; Number of iterations (number of nodes)
 
@@ -21,20 +21,20 @@ edge_loop:
     LDR Rptr, Rnode         ; Get the distance stored for the current node
     
     ; Check if infinite distance ;
-    MOVI Rtmp, 65535
-    CMP Rptr, Rtmp
+    MOVI Rtmp1, 65535
+    CMP Rptr, Rtmp1
     BZ edge_loop
 
     ; Compare old distance to new distance ;
-    MOVI Rtmp, 0
-    ADD Rtmp, Rptr, Rval
+    MOVI Rtmp1, 0
+    ADD Rtmp1, Rptr, Rval
     LDR Rptr, Rnbr
-    CMP Rtmp, Rptr
+    CMP Rtmp1, Rptr
     BLT found_shorter       ; We have found a new shortest path
     JMP edge_loop
 
 found_shorter:
-    STR Rtmp, Rnbr          ; Store the new shorter distance
+    STR Rtmp1, Rnbr          ; Store the new shorter distance
     JMP edge_loop           ; Return to edge_loop
 
 done:

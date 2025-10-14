@@ -10,8 +10,8 @@ MOVI Racc, 0            ; Distance from source to destination
 LD Rptr, 65533          ; Start node
 
 ; Need to mark start node as visited and push it into level 1 frontier ;
-MOVI Rtmp, 1
-STR Rtmp, Rptr
+MOVI Rtmp1, 1
+STR Rtmp1, Rptr
 PUSH Rptr
 FSWAP
 
@@ -21,8 +21,8 @@ loop:
     FEMPTY
     BZ next_level
     POP Rnode
-    LD Rtmp, 65534      ; Destination node
-    CMP Rtmp, Rnode
+    LD Rtmp1, 65534      ; Destination node
+    CMP Rtmp1, Rnode
     BZ done             ; Found target node
     NITER 0
 
@@ -33,13 +33,13 @@ neighbor_loop:
     BZ loop
 
     ; Check if visited ;
-    LDR Rtmp, Rnbr
-    CMP Rtmp, Rzero
+    LDR Rtmp1, Rnbr
+    CMP Rtmp1, Rzero
     BNZ neighbor_loop
 
     ; If not visited, mark and push ;
-    MOVI Rtmp, 1
-    STR Rtmp, Rnbr
+    MOVI Rtmp1, 1
+    STR Rtmp1, Rnbr
 
     PUSH Rnbr           ; Add to frontier
     JMP neighbor_loop   ; Continue checking neighbors

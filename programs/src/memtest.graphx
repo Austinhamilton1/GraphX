@@ -5,11 +5,11 @@
 0x1A ; 26 in decimal
 
 .code
-LD Rtmp 0 ; Read in 26 from memory
+LD Rtmp1, 0 ; Read in 26 from memory
 loop:
-    ADD Racc, Racc, Rtmp
-    SUBI Rtmp, Rtmp, 1
-    CMP Rtmp, Rzero
+    ADD Racc, Racc, Rtmp1
+    SUBI Rtmp1, Rtmp1, 1
+    CMP Rtmp1, Rzero
     BNZ loop
 ST Racc 1 ; Store the answer in memory
 HALT
