@@ -158,6 +158,7 @@ def main():
                     if event.key == pygame.K_s:
                         # Print out the graph in CSR format
                         matrix = to_adjacency_matrix()
+                        print(matrix)
                         graph = Graph(matrix)
                         print(graph)
                     elif event.key == pygame.K_w:

@@ -28,7 +28,7 @@ typedef enum {
     BZ,         // Conditional branch if zero
     BNZ,        // Conditional branch if not zero
     BLT,        // Conditional branch if less than
-    BGT,        // Conditional branch if greater than
+    BGE,        // Conditional branch if greater than or equal to
     JMP,        // Unconditional jump
 
     /* Graph access instructions */
@@ -107,6 +107,8 @@ typedef struct graphX_vm_t {
     graph_t             *graph;                 // Graph data structure
     frontier_t          *frontier;              // Frontier for graph exploration
     frontier_t          *next_frontier;         // Back frontier buffer (used for level-synchronicity)
+
+    uint64_t            clock;                  // Used to count instructions executed
 
     /* Debug hook */
     void                (*debug_hook)(struct graphX_vm_t *);

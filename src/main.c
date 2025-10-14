@@ -203,6 +203,7 @@ void debug_hook(graphX_vm_t *vm) {
 void exit_hook(graphX_vm_t *vm, int result) {
     if(result == VM_HALT) {
         printf("VM execution succeeded.\n");
+        printf("Total number of instructions: %lu\n", vm->clock);
         printf("Memory at end of program:\n");
         printf("\n");
         for(int i = 0; i < 256; i++) {

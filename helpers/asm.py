@@ -28,7 +28,7 @@ OPCODES = {
     'BZ': 1,        # Conditional branch if zero
     'BNZ': 2,       # Conditional branch if not zero
     'BLT': 3,       # Branch if less than
-    'BGT': 4,       # Branch if greater than
+    'BGE': 4,       # Branch if greater than
     'JMP': 5,       # Unconditional jump
     'NITER': 6,     # Initialize neighbor iteration
     'NNEXT': 7,     # Load next neighbor into Rnbr
@@ -65,7 +65,7 @@ def encode_instruction(op, args):
         return opcode
     
     # Immediate operations
-    elif op in ['BZ', 'BNZ', 'BLT', 'BGT', 'JMP', 'NITER', 'NNEXT']:
+    elif op in ['BZ', 'BNZ', 'BLT', 'BGE', 'JMP', 'NITER', 'NNEXT']:
         imm = int(args[0]) & IMMEDIATE_ARG_MASK
         return opcode | imm
     

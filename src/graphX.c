@@ -56,7 +56,7 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         // BLT is an immediate instruction
         ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
-    case BGT:
+    case BGE:
         // BGT is an immediate instruction
         ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
@@ -206,12 +206,12 @@ vm_status_t execute(graphX_vm_t *vm) {
         if(vm->FLAGS & FLAG_NEG)
             vm->PC = arg1;
         break;
-    case BGT:
+    case BGE:
         // Bounds checking
         if(arg1 >= MEMORY_SIZE) return VM_ERROR;
 
         // Conditional check for greater than
-        if(vm->FLAGS & FLAG_POS)
+        if(vm->FLAGS & FLAG_POS || vm->FLAGS & FLAG_ZERO)
             vm->PC = arg1;
         break;
     case JMP:
@@ -384,6 +384,7 @@ vm_status_t run(graphX_vm_t *vm) {
         if(decode(vm, data) < 0) return VM_ERROR;
         result = execute(vm);
         if(vm->debug_hook) vm->debug_hook(vm);
+        vm->clock++;
     }
 
     if(vm->exit_hook) vm->exit_hook(vm, result);
@@ -420,4 +421,5 @@ void graphX_reset(graphX_vm_t *vm) {
         frontier_init(vm->frontier, FRONTIER_QUEUE);
     if(vm->next_frontier)
         frontier_init(vm->next_frontier, FRONTIER_QUEUE);
+    vm->clock = 0;
 }
