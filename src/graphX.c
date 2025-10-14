@@ -65,10 +65,12 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
     case NITER:
-        // NITER takes no arguments
+        // NITER is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
     case NNEXT:
-        // NNEXT doesn't take any arguments
+        // NNEXT is an immediate instruction
+        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
         return 0;
     case EITER:
         // EITER takes no arguments
@@ -77,8 +79,7 @@ int decode(graphX_vm_t *vm, uint32_t data) {
         // ENEXT takes no arguments
         return 0;
     case HASE:
-        // HASE is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
+        // HASE takes no arguments
         return 0;
     case ADD:
         // ADD adds a register value to a register and stores it in another register
@@ -220,17 +221,21 @@ vm_status_t execute(graphX_vm_t *vm) {
         vm->PC = arg1;
         break;
     case NITER:
-        // Initialize the internal iterator
-        vm->niter = 0;
+        // Bounds check
+        if(arg1 >= 4) return VM_ERROR;
+        // Initialize one of the internal iterators
+        vm->niter[arg1] = 0;
         break;
     case NNEXT:
+        // Bounds check 
+        if(arg1 >= 4) return VM_ERROR;
         // Reset flags
         vm->FLAGS = 0;
         // Get the next neighbor
-        if(vm->graph->row_index[vm->Rnode] + vm->niter < vm->graph->row_index[vm->Rnode+1]) {
-            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter];
-            vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter];
-            vm->niter++;
+        if(vm->graph->row_index[vm->Rnode] + vm->niter[arg1] < vm->graph->row_index[vm->Rnode+1]) {
+            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter[arg1]];
+            vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter[arg1]];
+            vm->niter[arg1]++;
         }
         else
             vm->FLAGS |= FLAG_ZERO; // Signal done
@@ -265,9 +270,9 @@ vm_status_t execute(graphX_vm_t *vm) {
         break;
     case HASE:
         // Check if there is an edge between two nodes (binary search)
-        // You can branch with BZ after this
+        // You can branch with BNZ after this
         vm->FLAGS = 0;
-        if(graph_has_edge(vm->graph, vm->Rnode, arg1))
+        if(graph_has_edge(vm->graph, vm->Rnode, vm->Rnbr))
             vm->FLAGS |= FLAG_ZERO;
         break;
     case ADD:
@@ -402,9 +407,12 @@ void graphX_reset(graphX_vm_t *vm) {
     vm->Rval = 0;
     vm->Rnbr = 0;
     vm->Racc = 0;
-    vm->Rtmp = 0;
+    vm->Rtmp1 = 0;
+    vm->Rtmp2 = 0;
+    vm->Rtmp3 = 0;
     vm->Rzero = 0;
-    vm->niter = 0;
+    for(int i = 0; i < 4; i++)
+        vm->niter[i] = 0;
     vm->eiter = 0;
     memset(vm->memory, 0, sizeof(vm->memory));
     if(vm->frontier)

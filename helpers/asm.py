@@ -61,11 +61,11 @@ def encode_instruction(op, args):
     opcode = OPCODES[op] << 27
 
     # No argument operations
-    if op in ['HALT', 'NITER', 'NNEXT', 'EITER', 'ENEXT', 'FEMPTY', 'FSWAP']:
+    if op in ['HALT', 'EITER', 'ENEXT', 'FEMPTY', 'FSWAP', 'HASE']:
         return opcode
     
     # Immediate operations
-    elif op in ['BZ', 'BNZ', 'BLT', 'BGT', 'JMP', 'HASE']:
+    elif op in ['BZ', 'BNZ', 'BLT', 'BGT', 'JMP', 'NITER', 'NNEXT']:
         imm = int(args[0]) & IMMEDIATE_ARG_MASK
         return opcode | imm
     
@@ -118,9 +118,11 @@ def parse_assembly(lines):
         'Rnbr': 1,
         'Rval': 2,
         'Racc': 3,
-        'Rtmp': 4,
-        'Rptr': 5,
-        'Rzero': 6,
+        'Rtmp1': 4,
+        'Rtmp2': 5,
+        'Rtmp3': 6,
+        'Rptr': 7,
+        'Rzero': 8,
     }
     pc = 0
 

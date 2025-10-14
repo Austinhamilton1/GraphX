@@ -50,18 +50,9 @@ int graph_has_edge(graph_t *graph, uint32_t u, uint32_t v) {
     uint32_t start = graph->row_index[u];
     uint32_t end = graph->row_index[u+1];
 
-    // Columns are sorted by row, so search is binary
-    int l = start, h = end-1;
-    while (l <= h) {
-        int m = (l + h) / 2;
-        uint32_t val = graph->col_index[m];
-
-        if (val == v)
+    for(size_t i = start; i < end; i++) {
+        if(graph->col_index[i] == v)
             return 1;
-        else if (val < v)
-            l = m + 1;
-        else
-            h = m - 1;
     }
 
     // Edge was not found

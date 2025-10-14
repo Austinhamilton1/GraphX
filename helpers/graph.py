@@ -40,33 +40,20 @@ def main():
     current_node = -1
     start, end = -1, -1
 
-    # The spatial hash is used for quickly finding node intersections
-    spatial_hash = [[] for _ in range(0, 2000*1000 // 100)]
-
     # Used for adding edge weights
     weight_text = ''
     popup_rect = pygame.Rect(950, 475, 100, 50) # (100x50 centered in screen)
     popup_active = False
     current_edge = -1
 
-    def hash(x, y):
-        '''Spatial hash function'''
-        # The spatial hash is squares of 100*100 pixels flattened into a singular array
-        # This is a basic spatial hash function for that setup
-        return (1000 // 100)*(y // 100) + x // 100
-
     def intersect_point(x, y):
         '''Get an intersecting node if it exists'''
         target_node = -1
 
-        # Query spatial hash map
-        h = hash(x, y)
-        potentials = spatial_hash[h]
-
-        for i in range(len(potentials)):
+        for i in range(len(nodes)):
             # Hash map is stored as entries with (index, x_pos, y_pos)
-            if (potentials[i][1] - x)**2 + (potentials[i][2] - y)**2 < 15**2:
-                target_node = potentials[i][0]
+            if (nodes[i][0] - x)**2 + (nodes[i][1] - y)**2 < 15**2:
+                target_node = i
         return target_node
     
     def to_adjacency_matrix():
@@ -147,8 +134,6 @@ def main():
                         if i < 0:
                             # Not intersecting, add to nodes and spatial hash
                             nodes.append((event.pos[0], event.pos[1]))
-                            h = hash(*event.pos)
-                            spatial_hash[h].append(((len(nodes)-1), event.pos[0], event.pos[1]))
                             current_node = len(nodes)-1
                         else:
                             # Intersecting, handle intersection

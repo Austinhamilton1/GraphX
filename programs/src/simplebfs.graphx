@@ -26,10 +26,10 @@ loop:
     POP Rnode       ; Get next node
     STR Rnode, Rptr
     SUBI Rptr, Rptr, 1
-    NITER
+    NITER 0
 
 neighbor_loop:
-    NNEXT            ; Get neighbor
+    NNEXT 0         ; Get neighbor
     BZ loop
 
     ; Check if visited

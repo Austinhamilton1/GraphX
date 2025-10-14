@@ -65,7 +65,9 @@ typedef enum {
     R_NBR,
     R_VAL,
     R_ACC,
-    R_TMP,
+    R_TMP1,
+    R_TMP2,
+    R_TMP3,
     R_PTR,
     R_ZERO,
     R_COUNT,
@@ -88,7 +90,9 @@ typedef struct graphX_vm_t {
             uint32_t    Rnbr;                   // Neighbor node
             uint32_t    Rval;                   // Weight value
             uint32_t    Racc;                   // Accumulator register
-            uint32_t    Rtmp;                   // Temporary register
+            uint32_t    Rtmp1;                  // Temporary register
+            uint32_t    Rtmp2;                  // Temporary register
+            uint32_t    Rtmp3;                  // Temporary register
             uint32_t    Rptr;                   // Temporary register for pointers
             uint32_t    Rzero;                  // Zero register
         };
@@ -98,7 +102,7 @@ typedef struct graphX_vm_t {
     /* Memory */
     uint32_t            program[PROGRAM_SIZE];  // Instructions to run
     uint32_t            memory[MEMORY_SIZE];    // Memory
-    uint32_t            niter;                  // Node iterator index
+    uint32_t            niter[4];               // Node iterator index list
     uint32_t            eiter;                  // Edge iterator index
     graph_t             *graph;                 // Graph data structure
     frontier_t          *frontier;              // Frontier for graph exploration
