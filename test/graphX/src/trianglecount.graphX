@@ -3,33 +3,31 @@
 
 .code
 MOVI Racc, 0                ; Final Count
-MOVI Rptr, 0                ; Current node
+MOVI Rtmp1, 24              ; Current node
 
 loop:                       ; Main loop
     ; Check for exit condition ;
-    MOVI Rtmp3, 25
-    CMP Rptr, Rtmp3
+    CMP Rtmp1, Rzero
     BZ done
 
     ; Start iteration on current node ;
-    MOV Rnode, Rptr
+    MOV Rnode, Rtmp1
     NITER 0
 
-    ADDI Rptr, Rptr, 1      ; Increment pointer
+    SUBI Rtmp1, Rtmp1, 1      ; Increment pointer
 
 a_loop:
     NNEXT 0                 ; Get the next neighbor
     BZ loop
     
-    MOV Rtmp1, Rnbr         ; store state
+    MOV Rtmp2, Rnbr         ; store state
 
     NITER 1                 ; Initialize the second iterator
 
     ; Only check neighbors less than current to ;
     ; ensure no double counting ;
     CMP Rnbr, Rnode
-    BLT b_loop
-    JMP a_loop
+    BGE a_loop
 
 b_loop:
     NNEXT 1                 ; Get the next neighbor
@@ -38,23 +36,21 @@ b_loop:
     ; Only check neighbors greater than current to
     ; ensure no double counting ;
     CMP Rnode, Rnbr
-    BLT check_triangle
-    JMP b_loop
-
-check_triangle:
-    MOV Rtmp2, Rnode        ; Store state
+    BGE b_loop
+    
+    MOV Rtmp3, Rnode        ; Store state
     
     ; Check to see if a and b are neighbors ;
-    ; (a is in Rtmp1, b is in Rnbr) ;
-    MOV Rnode, Rtmp1
+    ; (a is in Rtmp2, b is in Rnbr) ;
+    MOV Rnode, Rtmp2
     HASE
     BNZ found_triangle
-    MOV Rnode, Rtmp2        ; Restore state
+    MOV Rnode, Rtmp3        ; Restore state
     JMP b_loop
 
 found_triangle:
     ADDI, Racc, Racc, 1
-    MOV Rnode, Rtmp2
+    MOV Rnode, Rtmp3
     JMP b_loop
 
 done:

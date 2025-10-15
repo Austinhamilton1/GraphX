@@ -68,7 +68,6 @@ typedef enum {
     R_TMP1,
     R_TMP2,
     R_TMP3,
-    R_PTR,
     R_ZERO,
     R_COUNT,
 } reg;
@@ -93,7 +92,6 @@ typedef struct graphX_vm_t {
             uint32_t    Rtmp1;                  // Temporary register
             uint32_t    Rtmp2;                  // Temporary register
             uint32_t    Rtmp3;                  // Temporary register
-            uint32_t    Rptr;                   // Temporary register for pointers
             uint32_t    Rzero;                  // Zero register
         };
         uint32_t        R[R_COUNT];             // Register indexer

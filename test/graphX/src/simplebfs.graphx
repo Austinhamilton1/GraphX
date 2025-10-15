@@ -10,13 +10,13 @@
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 
 .code
-MOVI Rptr, 0        ; Start with the first node
-PUSH Rptr           ; Start the frontier
+MOVI Rtmp1, 0        ; Start with the first node
+PUSH Rtmp1           ; Start the frontier
 
-MOVI Rtmp1, 1        ; Mark the first node as visited
-STR Rtmp1, Rptr
+MOVI Rtmp2, 1        ; Mark the first node as visited
+STR Rtmp2, Rtmp1
 
-MOVI Rptr, 65535    ; Start of BFS result (works backwards)
+MOVI Rtmp1, 65535    ; Start of BFS result (works backwards)
 
 FSWAP               ; Swap the frontiers
 
@@ -24,8 +24,8 @@ loop:
     FEMPTY
     BZ next_level
     POP Rnode       ; Get next node
-    STR Rnode, Rptr
-    SUBI Rptr, Rptr, 1
+    STR Rnode, Rtmp1
+    SUBI Rtmp1, Rtmp1, 1
     NITER 0
 
 neighbor_loop:
@@ -33,13 +33,13 @@ neighbor_loop:
     BZ loop
 
     ; Check if visited
-    LDR Rtmp1, Rnbr  ; visited[neighbor]
-    CMP Rtmp1, Rzero
+    LDR Rtmp2, Rnbr  ; visited[neighbor]
+    CMP Rtmp2, Rzero
     BNZ neighbor_loop
 
     ; If not visited, mark and push
-    MOVI Rtmp1, 1    ; Need to store a 1 at visited[neighbor]
-    STR Rtmp1, Rnbr  ; Store the 1 at visited[neighbor]
+    MOVI Rtmp2, 1    ; Need to store a 1 at visited[neighbor]
+    STR Rtmp2, Rnbr  ; Store the 1 at visited[neighbor]
 
     PUSH Rnbr       ; Add to frontier
     JMP neighbor_loop

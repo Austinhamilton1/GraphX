@@ -121,8 +121,7 @@ def parse_assembly(lines):
         'Rtmp1': 4,
         'Rtmp2': 5,
         'Rtmp3': 6,
-        'Rptr': 7,
-        'Rzero': 8,
+        'Rzero': 7,
     }
     pc = 0
 

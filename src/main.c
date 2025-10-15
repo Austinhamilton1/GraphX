@@ -18,7 +18,7 @@ static const char *opcodes[] = {
     "BZ",
     "BNZ",
     "BLT",
-    "BGT",
+    "BGE",
     "JMP",    
     "NITER",     
     "NNEXT",
@@ -171,7 +171,7 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
 void debug_hook(graphX_vm_t *vm) {
     printf("PC=%u, ISA=%s, FLAGS=%u\n", vm->PC, opcodes[vm->ISA], vm->FLAGS);
     printf("niter0=%u, niter1=%u, niter2=%u, niter3=%u, eiter=%u\n", vm->niter[0], vm->niter[1], vm->niter[2], vm->niter[3], vm->eiter);
-    printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u, Rptr=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc, vm->Rptr);
+    printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc);
     printf("Rtmp1=%u, Rtmp2=%u, Rtmp3=%u\n", vm->Rtmp1, vm->Rtmp2, vm->Rtmp3);
     printf("Frontier:\n");
     printf("Front=%lu, Back=%lu\n", vm->frontier->backend.queue.front, vm->frontier->backend.queue.back);

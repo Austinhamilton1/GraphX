@@ -3,15 +3,15 @@
 
 .code 
 MOVI Racc, 65537    ; Loop counter (one past end of memory)
-MOVI Rptr, 0        ; Memory pointer
+MOVI Rtmp1, 0        ; Memory pointer
 
 loop:
     ; Write to all memory cells then try one out of bounds ;
-    MOVI Rtmp1, 1
-    STR Rtmp1, Rptr
+    MOVI Rtmp2, 1
+    STR Rtmp2, Rtmp1
     CMP Racc, Rzero
     BZ done
-    ADDI Rptr, Rptr, 1
+    ADDI Rtmp1, Rtmp1, 1
     SUBI Racc, Racc, 1
     JMP loop
 done:
