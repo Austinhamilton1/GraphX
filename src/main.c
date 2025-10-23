@@ -124,7 +124,7 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
     }
 
     // Load program
-    if(fread(vm->program, sizeof(uint32_t), code_len, f) != code_len) {
+    if(fread(vm->program, sizeof(uint64_t), code_len, f) != code_len) {
         fprintf(stderr, "Error: failed to read program section\n");
         fclose(f);
         return -1;

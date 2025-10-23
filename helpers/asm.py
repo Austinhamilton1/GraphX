@@ -16,10 +16,10 @@ import struct
 import sys
 
 OPCODE_ARG_MASK         = 0x0000001F 
-REGISTER_ARG_MASK       = 0x00000007 
-IMMEDIATE_ARG_MASK      = 0x07FFFFFF 
-CONSTANT_ARG_MASK       = 0x00FFFFFF  
-REG_CONSTANT_ARG_MASK   = 0x001FFFFF  
+REGISTER_ARG_MASK       = 0x000000FF 
+IMMEDIATE_ARG_MASK      = 0xFFFFFFFF
+FLAG_R                  = 0x00000001
+FLAG_I                  = 0x00000002
 
 '''=== Instruction Encoding ====================================================='''
 
@@ -54,51 +54,51 @@ OPCODES = {
 
 def encode_instruction(op, args):
     '''
-    Encode an instruction to 32 bits.
+    Encode an instruction to 64 bits.
     Simplified encoding:
-        [ 5 bits opcode | 27 bits args (packed manually) ]
+        [ 5 bits opcode | 3 bit flags | 8 bit dst | 8 bit src1 | 8 bit src2 | 32 bit imm ]
     '''
-    opcode = OPCODES[op] << 27
+    opcode = OPCODES[op] << 59
 
     # No argument operations
     if op in ['HALT', 'EITER', 'ENEXT', 'FEMPTY', 'FSWAP', 'HASE']:
-        return opcode
+        return opcode | (FLAG_R << 56)
     
     # Immediate operations
     elif op in ['BZ', 'BNZ', 'BLT', 'BGE', 'JMP', 'NITER', 'NNEXT']:
         imm = int(args[0]) & IMMEDIATE_ARG_MASK
-        return opcode | imm
+        return opcode | (FLAG_I << 56) | imm
     
     # Register-Register-Register operations
     elif op in ['ADD', 'SUB']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
         r1 = int(args[1]) & REGISTER_ARG_MASK
         r2 = int(args[2]) & REGISTER_ARG_MASK
-        return opcode | (r0 << 24) | (r1 << 21) | (r2 << 18)
+        return opcode | (FLAG_R << 56) | (r0 << 48) | (r1 << 40) | (r2 << 32)
     
-    # Register-Register-Constant operations
+    # Register-Register-Immediate operations
     elif op in ['ADDI', 'SUBI']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
         r1 = int(args[1]) & REGISTER_ARG_MASK
-        const = int(args[2]) & REG_CONSTANT_ARG_MASK
-        return opcode | (r0 << 24) | (r1 << 21) | const
+        imm = int(args[2]) & IMMEDIATE_ARG_MASK
+        return opcode | (FLAG_I << 56) | (r0 << 48) | (r1 << 40) | imm
     
     # Register-Register operations
     elif op in ['CMP', 'MOV', 'LDR', 'STR']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
         r1 = int(args[1]) & REGISTER_ARG_MASK
-        return opcode | (r0 << 24) | (r1 << 21)
+        return opcode | (FLAG_R << 56) | (r0 << 48) | (r1 << 40)
 
-    # Register-Constant operations
+    # Register-Immediate operations
     elif op in ['MOVI', 'LD', 'ST']:
         r = int(args[0]) & REGISTER_ARG_MASK
-        const = int(args[1]) & CONSTANT_ARG_MASK
-        return opcode | (r << 24) | const
+        imm = int(args[1]) & IMMEDIATE_ARG_MASK
+        return opcode | (FLAG_I << 56) | (r << 48) | imm
 
     # Register operations
     elif op in ['PUSH', 'POP']:
         r = int(args[0]) & REGISTER_ARG_MASK
-        return opcode | (r << 24)
+        return opcode | (FLAG_R << 56) | (r << 48)
 
     # Invalid opcode
     else:
@@ -210,7 +210,7 @@ def parse_assembly(lines):
             for token in tokens:
                 # Allow decimal or hex
                 mem.append(int(token, 0))
-
+                
     return code, data, mem
 
 '''=== Binary Output ========================================================================'''
@@ -221,7 +221,10 @@ def write_binary(filename, code, data, mem):
         f.write(struct.pack('<IIIII', len(code), len(data['row_index']), len(data['col_index']), len(data['values']), len(mem)))
 
         # Sections
-        for section in (code, data['row_index'], data['col_index'], data['values'], mem):
+        for word in code:
+            f.write(struct.pack('<Q', word))
+
+        for section in (data['row_index'], data['col_index'], data['values'], mem):
             for word in section:
                 f.write(struct.pack('<I', word))
 

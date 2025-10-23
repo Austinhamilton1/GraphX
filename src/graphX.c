@@ -9,14 +9,14 @@
  * Arguments:
  *     graphX_vm_t *vm - The VM to fetch from.
  * Returns:
- *     uint32_t - The encoded instruction.
+ *     uint64_t - The encoded instruction.
  */
-uint32_t fetch(graphX_vm_t *vm) {
+uint64_t fetch(graphX_vm_t *vm) {
     // Return HALT if the PC is out of bounds
     if(vm->PC >= PROGRAM_SIZE) return VM_HALT;
 
     // Fetch the next instruction
-    uint32_t data = vm->program[vm->PC];
+    uint64_t data = vm->program[vm->PC];
     vm->PC++;
     return data;
 }
@@ -26,137 +26,68 @@ uint32_t fetch(graphX_vm_t *vm) {
  *
  * Arguments:
  *     graphX_vm_t *vm - The vm the instruction came from.
- *     uint32_t data - Data to decode.
+ *     uint64_t data - Data to decode.
  * Returns:
  *     int - 0 on sucess -1 on error.
  */
-int decode(graphX_vm_t *vm, uint32_t data) {
+int decode(graphX_vm_t *vm, uint64_t data) {
     // Zero out arguments
     ARG1(vm) = 0;
     ARG2(vm) = 0;
     ARG3(vm) = 0;
 
     // Opcode is stored in most significant 5 bits
-    vm->ISA = (data >> 27) & 0x1F;
+    vm->ISA = (data >> 59) & OPCODE_ARG_MASK;
 
-    // If a valid opcode is passed, return it
+    // Flags are stored in the next 3 bits
+    int flags = (data >> 56) & FLAGS_ARG_MASK;
+
+    // First two register args are stored in subsequent 8 bits
+    ARG1(vm) = (data >> 48) & REGISTER_ARG_MASK;
+    ARG2(vm) = (data >> 40) & REGISTER_ARG_MASK;
+
+    // The flags will determine if this is an R-type or I-type instruction
+    if(flags & FLAG_R) {
+        ARG3(vm) = (data >> 32) & REGISTER_ARG_MASK;
+    } else if(flags & FLAG_I) {
+        ARG3(vm) = data & IMMEDIATE_ARG_MASK;
+    } else {
+        // Invalid flags argument was passed in
+        return -1;
+    }
+
+    // If a valid opcode is passed, return 0
     switch(vm->ISA) {
     case HALT:
-        // Halt does nothing
-        return 0;
     case BZ:
-        // BZ is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case BNZ:
-        // BNZ is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case BLT:
-        // BLT is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case BGE:
-        // BGT is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case JMP:
-        // JMP is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case NITER:
-        // NITER is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case NNEXT:
-        // NNEXT is an immediate instruction
-        ARG1(vm) = data & IMMEDIATE_ARG_MASK;
-        return 0;
     case EITER:
-        // EITER takes no arguments
-        return 0;
     case ENEXT:
-        // ENEXT takes no arguments
-        return 0;
     case HASE:
-        // HASE takes no arguments
-        return 0;
     case ADD:
-        // ADD adds a register value to a register and stores it in another register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        ARG3(vm) = (data >> 18) & REGISTER_ARG_MASK;
-        return 0;
     case ADDI:
-        // ADDI adds a constant value to a register and stores it in another register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        ARG3(vm) = data & REG_CONSTANT_ARG_MASK;
-        return 0;
     case SUB:
-        // SUB subtracts a register value from a register and stores it in another register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        ARG3(vm) = (data >> 18) & REGISTER_ARG_MASK;
-        return 0;
     case SUBI:
-        // SUBI subtracts a constant value from a register and stores it in another register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        ARG3(vm) = data & REG_CONSTANT_ARG_MASK;
-        return 0;
     case CMP:
-        // CMP compares two register values and stores the results in the FLAG register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        return 0;
     case MOV:
-        // MOV moves a register value from a source register to a destination register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        return 0;
     case MOVI:
-        // MOVI moves a constant value into a register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = data & CONSTANT_ARG_MASK;
-        return 0;
     case LD:
-        // LD loads a value from memory to a register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = data & CONSTANT_ARG_MASK;
-        return 0;
     case ST:
-        // ST stores a value from a register to memory
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = data & CONSTANT_ARG_MASK;
-        return 0;
     case LDR:
-        // LDR loads an address from a register into another register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        return 0;
     case STR:
-        // STR stores a register to an address from another register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        ARG2(vm) = (data >> 21) & REGISTER_ARG_MASK;
-        return 0;
     case PUSH:
-        // PUSH pushes a register to the frontier
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        return 0;
     case POP:
-        // POP pops a node from the frontier into a register
-        ARG1(vm) = (data >> 24) & REGISTER_ARG_MASK;
-        return 0;
     case FEMPTY:
-        // FEMPTY takes no arguments
-        return 0;
     case FSWAP:
-        // FSWAP takes no arguments
         return 0;
     }
 
-    // If an invalid opcode is passed, assume halt
+    // If an invalid opcode is passed, return -1
     return -1;
 }
 
@@ -184,59 +115,59 @@ vm_status_t execute(graphX_vm_t *vm) {
         return VM_HALT;
     case BZ:
         // Bounds checking
-        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
         
         // Conditional check for zero
         if(vm->FLAGS & FLAG_ZERO)
-            vm->PC = arg1;
+            vm->PC = arg3;
         break;
     case BNZ:
         // Bounds checking
-        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
 
         // Conditional check for non-zero
         if(!(vm->FLAGS & FLAG_ZERO))
-            vm->PC = arg1;        
+            vm->PC = arg3;        
         break;
     case BLT:
         // Bounds checking
-        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
 
         // Conditional check for less than
         if(vm->FLAGS & FLAG_NEG)
-            vm->PC = arg1;
+            vm->PC = arg3;
         break;
     case BGE:
         // Bounds checking
-        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
 
         // Conditional check for greater than
         if(vm->FLAGS & FLAG_POS || vm->FLAGS & FLAG_ZERO)
-            vm->PC = arg1;
+            vm->PC = arg3;
         break;
     case JMP:
         // Bounds checking
-        if(arg1 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
 
         // Unconditional branch
-        vm->PC = arg1;
+        vm->PC = arg3;
         break;
     case NITER:
         // Bounds check
-        if(arg1 >= 4) return VM_ERROR;
+        if(arg3 >= 4) return VM_ERROR;
         // Initialize one of the internal iterators
-        vm->niter[arg1] = 0;
+        vm->niter[arg3] = 0;
         break;
     case NNEXT:
         // Bounds check 
-        if(arg1 >= 4) return VM_ERROR;
+        if(arg3 >= 4) return VM_ERROR;
         // Reset flags
         vm->FLAGS = 0;
         // Get the next neighbor
-        if(vm->graph->row_index[vm->Rnode] + vm->niter[arg1] < vm->graph->row_index[vm->Rnode+1]) {
-            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter[arg1]];
-            vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter[arg1]];
-            vm->niter[arg1]++;
+        if(vm->graph->row_index[vm->Rnode] + vm->niter[arg3] < vm->graph->row_index[vm->Rnode+1]) {
+            vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter[arg3]];
+            vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter[arg3]];
+            vm->niter[arg3]++;
         }
         else
             vm->FLAGS |= FLAG_ZERO; // Signal done
@@ -306,19 +237,19 @@ vm_status_t execute(graphX_vm_t *vm) {
         break;
     case MOVI:
         // Move an immediate value into a register
-        vm->R[arg1] = arg2;
+        vm->R[arg1] = arg3;
         break;
     case LD:
         // Load a value from memory into a register
         // Bounds check
-        if(arg2 > MEMORY_SIZE) return VM_ERROR;
-        vm->R[arg1] = vm->memory[arg2];
+        if(arg3 > MEMORY_SIZE) return VM_ERROR;
+        vm->R[arg1] = vm->memory[arg3];
         break;
     case ST:
         // Store a value from a register into memory
         // Bounds check
-        if(arg2 > MEMORY_SIZE) return VM_ERROR;
-        vm->memory[arg2] = vm->R[arg1];
+        if(arg3 > MEMORY_SIZE) return VM_ERROR;
+        vm->memory[arg3] = vm->R[arg1];
         break;
     case LDR:
         // Load a value from an memory specified by a register address
@@ -376,7 +307,7 @@ vm_status_t run(graphX_vm_t *vm) {
 
     // Fetch, decode, execute pipeline
     while(result == VM_CONTINUE) {
-        uint32_t data = fetch(vm);
+        uint64_t data = fetch(vm);
         if(data == VM_HALT) {
             result = VM_HALT;
             break;

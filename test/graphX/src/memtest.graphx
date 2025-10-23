@@ -2,9 +2,10 @@
 ;;; Read number from memory and add all numbers from 1 - that number
 
 .mem
-0x1A ; 26 in decimal
+0x3 ; 3 in decimal
 
 .code
+MOVI Racc, 0
 LD Rtmp1, 0 ; Read in 26 from memory
 loop:
     ADD Racc, Racc, Rtmp1

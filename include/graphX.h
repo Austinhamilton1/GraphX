@@ -6,14 +6,16 @@
 #include "graph.h"
 
 #define OPCODE_ARG_MASK         0x0000001F  // 5 bit opcodes
-#define REGISTER_ARG_MASK       0x00000007  // 3 bit register arguments
-#define IMMEDIATE_ARG_MASK      0x07FFFFFF  // 27 bit immediate arguments
-#define CONSTANT_ARG_MASK       0x00FFFFFF  // 24 bit constant arguments
-#define REG_CONSTANT_ARG_MASK   0x001FFFFF  // 21 bit register constant arguments
+#define FLAGS_ARG_MASK          0x00000007  // 3 bit flags
+#define REGISTER_ARG_MASK       0x000000FF  // 8 bit register arguments
+#define IMMEDIATE_ARG_MASK      0xFFFFFFFF  // 32 bit immediate arguments
 
 #define ARG1(vm) (vm->A0)   // First argument of instruction
 #define ARG2(vm) (vm->A1)   // Second argument of instruction
 #define ARG3(vm) (vm->A2)   // Third argument of instruction
+
+#define FLAG_R      0x1 // Instruction is R-type
+#define FLAG_I      0x2 // Instruction is I-type
 
 #define FLAG_ZERO   0x1 // Check if CMP resulted in zero
 #define FLAG_NEG    0x2 // Check if CMP resulted in negative
@@ -98,7 +100,7 @@ typedef struct graphX_vm_t {
     };
 
     /* Memory */
-    uint32_t            program[PROGRAM_SIZE];  // Instructions to run
+    uint64_t            program[PROGRAM_SIZE];  // Instructions to run
     uint32_t            memory[MEMORY_SIZE];    // Memory
     uint32_t            niter[4];               // Node iterator index list
     uint32_t            eiter;                  // Edge iterator index
@@ -116,8 +118,8 @@ typedef struct graphX_vm_t {
 } graphX_vm_t;
 
 /* Functions needed to run instructions */
-uint32_t fetch(graphX_vm_t *vm);
-int decode(graphX_vm_t *vm, uint32_t data);
+uint64_t fetch(graphX_vm_t *vm);
+int decode(graphX_vm_t *vm, uint64_t data);
 vm_status_t execute(graphX_vm_t *vm);
 
 /* Run a graphX program */
