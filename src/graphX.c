@@ -101,12 +101,11 @@ int decode(graphX_vm_t *vm, uint64_t data) {
  */
 vm_status_t execute(graphX_vm_t *vm) {
     // Parse out the opcode and arguments
-    uint32_t opcode, arg1, arg2, arg3;
+    int32_t opcode, arg1, arg2, arg3, comp;
     opcode = vm->ISA;
     arg1 = ARG1(vm);
     arg2 = ARG2(vm);
     arg3 = ARG3(vm);
-    int comp;
 
     // Execute the inputted opcode
     switch(opcode) {
@@ -115,7 +114,7 @@ vm_status_t execute(graphX_vm_t *vm) {
         return VM_HALT;
     case BZ:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
         
         // Conditional check for zero
         if(vm->FLAGS & FLAG_ZERO)
@@ -123,7 +122,7 @@ vm_status_t execute(graphX_vm_t *vm) {
         break;
     case BNZ:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE | arg3 < 0) return VM_ERROR;
 
         // Conditional check for non-zero
         if(!(vm->FLAGS & FLAG_ZERO))
@@ -131,7 +130,7 @@ vm_status_t execute(graphX_vm_t *vm) {
         break;
     case BLT:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
 
         // Conditional check for less than
         if(vm->FLAGS & FLAG_NEG)
@@ -139,7 +138,7 @@ vm_status_t execute(graphX_vm_t *vm) {
         break;
     case BGE:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
 
         // Conditional check for greater than
         if(vm->FLAGS & FLAG_POS || vm->FLAGS & FLAG_ZERO)
@@ -147,20 +146,20 @@ vm_status_t execute(graphX_vm_t *vm) {
         break;
     case JMP:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE) return VM_ERROR;
+        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
 
         // Unconditional branch
         vm->PC = arg3;
         break;
     case NITER:
         // Bounds check
-        if(arg3 >= 4) return VM_ERROR;
+        if(arg3 >= 4 || arg3 < 0) return VM_ERROR;
         // Initialize one of the internal iterators
         vm->niter[arg3] = 0;
         break;
     case NNEXT:
         // Bounds check 
-        if(arg3 >= 4) return VM_ERROR;
+        if(arg3 >= 4 || arg3 < 0) return VM_ERROR;
         // Reset flags
         vm->FLAGS = 0;
         // Get the next neighbor
@@ -226,7 +225,7 @@ vm_status_t execute(graphX_vm_t *vm) {
     case CMP:
         // Compare two registers and store the results in FLAGS
         vm->FLAGS = 0;
-        comp = (int)vm->R[arg1] - (int)vm->R[arg2];
+        comp = vm->R[arg1] - vm->R[arg2];
         if(comp == 0) vm->FLAGS |= FLAG_ZERO;
         else if(comp < 0) vm->FLAGS |= FLAG_NEG;
         else vm->FLAGS |= FLAG_POS;
@@ -242,25 +241,25 @@ vm_status_t execute(graphX_vm_t *vm) {
     case LD:
         // Load a value from memory into a register
         // Bounds check
-        if(arg3 > MEMORY_SIZE) return VM_ERROR;
+        if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
         vm->R[arg1] = vm->memory[arg3];
         break;
     case ST:
         // Store a value from a register into memory
         // Bounds check
-        if(arg3 > MEMORY_SIZE) return VM_ERROR;
+        if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
         vm->memory[arg3] = vm->R[arg1];
         break;
     case LDR:
         // Load a value from an memory specified by a register address
         // Bounds check
-        if(vm->R[arg2] > MEMORY_SIZE) return VM_ERROR;
+        if(vm->R[arg2] > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
         vm->R[arg1] = vm->memory[vm->R[arg2]];
         break;
     case STR:
         // Store a value in memory specified by a register address
         // Bounds check
-        if(vm->R[arg2] > MEMORY_SIZE) return VM_ERROR;
+        if(vm->R[arg2] > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
         vm->memory[vm->R[arg2]] = vm->R[arg1];
         break;
     case PUSH:

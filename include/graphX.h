@@ -82,26 +82,26 @@ typedef struct graphX_vm_t {
     uint32_t            PC;                     // Program counter
     instruction         ISA;                    // Instruction register
     uint32_t            FLAGS;                  // Operation result register
-    uint32_t            A0, A1, A2;             // Argument registers
+    int32_t             A0, A1, A2;             // Argument registers
 
     /* Register file */
     union {
         struct {
-            uint32_t    Rnode;                  // Current node
-            uint32_t    Rnbr;                   // Neighbor node
-            uint32_t    Rval;                   // Weight value
-            uint32_t    Racc;                   // Accumulator register
-            uint32_t    Rtmp1;                  // Temporary register
-            uint32_t    Rtmp2;                  // Temporary register
-            uint32_t    Rtmp3;                  // Temporary register
-            uint32_t    Rzero;                  // Zero register
+            int32_t     Rnode;                  // Current node
+            int32_t     Rnbr;                   // Neighbor node
+            int32_t     Rval;                   // Weight value
+            int32_t     Racc;                   // Accumulator register
+            int32_t     Rtmp1;                  // Temporary register
+            int32_t     Rtmp2;                  // Temporary register
+            int32_t     Rtmp3;                  // Temporary register
+            int32_t     Rzero;                  // Zero register
         };
-        uint32_t        R[R_COUNT];             // Register indexer
+        int32_t         R[R_COUNT];             // Register indexer
     };
 
     /* Memory */
     uint64_t            program[PROGRAM_SIZE];  // Instructions to run
-    uint32_t            memory[MEMORY_SIZE];    // Memory
+    int32_t             memory[MEMORY_SIZE];    // Memory
     uint32_t            niter[4];               // Node iterator index list
     uint32_t            eiter;                  // Edge iterator index
     graph_t             *graph;                 // Graph data structure
