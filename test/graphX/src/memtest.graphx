@@ -6,7 +6,7 @@
 
 .code
 MOVI Racc, 0
-LD Rtmp1, 0 ; Read in 26 from memory
+LD Rtmp1, 0 ; Read in 3 from memory
 loop:
     ADD Racc, Racc, Rtmp1
     SUBI Rtmp1, Rtmp1, 1

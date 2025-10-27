@@ -19,27 +19,50 @@ static const char *opcodes[] = {
     "BNZ",
     "BLT",
     "BGE",
-    "JMP",    
-    "NITER",     
+    "JMP",
+    "NITER",
     "NNEXT",
     "EITER",
-    "ENEXT",      
-    "HASE", 
-    "ADD",       
-    "ADDI",    
-    "SUB",   
-    "SUBI",   
-    "CMP",   
-    "MOV", 
-    "MOVI", 
-    "LD",  
-    "ST",  
-    "LDR", 
-    "STR", 
+    "ENEXT",
+    "HASE",
+    "DEG",
+    "ADD",
+    "ADDI",
+    "ADDF",
+    "ADDFI",
+    "SUB",
+    "SUBI",
+    "SUBF",
+    "SUBFI",
+    "MULT",
+    "MULTI",
+    "MULTF",
+    "MULTFI",
+    "DIV",
+    "DIVI",
+    "DIVF",
+    "DIVFI",
+    "CMP",
+    "CMPF",
+    "MOV",
+    "MOVI",
+    "MOVF",
+    "MOVFI",
+    "MOVC",
+    "MOVCF",
+    "LD",
+    "ST",
+    "LDF",
+    "STF",
+    "LDR",
+    "STR",
+    "LDRF",
+    "STRF",
     "PUSH",
-    "POP", 
-    "FEMPTY", 
+    "POP",
+    "FEMPTY",
     "FSWAP",
+    "FFILL",
 };
 
 int main(int argc, char **argv) {
@@ -131,18 +154,18 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
     }
 
     // Load graph
-    vm->graph->n = col_index_len;
-    if(row_index_len > 0 && fread(vm->graph->row_index, sizeof(uint32_t), row_index_len, f) != row_index_len) {
+    vm->graph->n = row_index_len - 1;
+    if(row_index_len > 0 && fread(vm->graph->row_index, sizeof(int32_t), row_index_len, f) != row_index_len) {
         fprintf(stderr, "Error: failed to read row index section\n");
         fclose(f);
         return -1;
     }
-    if(col_index_len > 0 && fread(vm->graph->col_index, sizeof(uint32_t), col_index_len, f) != col_index_len) {
+    if(col_index_len > 0 && fread(vm->graph->col_index, sizeof(int32_t), col_index_len, f) != col_index_len) {
         fprintf(stderr, "Error: failed to read column index section\n");
         fclose(f);
         return -1;
     }
-    if(values_len > 0 && fread(vm->graph->values, sizeof(uint32_t), values_len, f) != values_len) {
+    if(values_len > 0 && fread(vm->graph->values, sizeof(int32_t), values_len, f) != values_len) {
         fprintf(stderr, "Error: failed to read values section\n");
         fclose(f);
         return -1;
@@ -150,7 +173,7 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
 
     // Load memory initialization
     if(mem_len > 0) {
-        if(fread(vm->memory, sizeof(uint32_t), mem_len, f) != mem_len) {
+        if(fread(vm->memory, sizeof(int32_t), mem_len, f) != mem_len) {
             fprintf(stderr, "Error: failed to read memory section\n");
             fclose(f);
             return -1;
@@ -172,7 +195,8 @@ void debug_hook(graphX_vm_t *vm) {
     printf("PC=%u, ISA=%s, FLAGS=%u\n", vm->PC, opcodes[vm->ISA], vm->FLAGS);
     printf("niter0=%u, niter1=%u, niter2=%u, niter3=%u, eiter=%u\n", vm->niter[0], vm->niter[1], vm->niter[2], vm->niter[3], vm->eiter);
     printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc);
-    printf("Rtmp1=%u, Rtmp2=%u, Rtmp3=%u\n", vm->Rtmp1, vm->Rtmp2, vm->Rtmp3);
+    printf("Rtmp1=%u, Rtmp2=%u, Rtmp3=%u, Rtmp4=%u\n", vm->Rtmp1, vm->Rtmp2, vm->Rtmp3, vm->Rtmp4);
+    printf("Facc=%0.5f, Ftmp1=%0.5f, Ftmp2=%0.5f, Ftmp3=%0.5f, Ftmp4=%0.5f\n", vm->Facc, vm->Ftmp1, vm->Ftmp2, vm->Ftmp3, vm->Ftmp4);
     printf("Frontier:\n");
     printf("Front=%lu, Back=%lu\n", vm->frontier->backend.queue.front, vm->frontier->backend.queue.back);
     for(int i = 0; i < 10; i++)
@@ -184,11 +208,12 @@ void debug_hook(graphX_vm_t *vm) {
         printf("%u ", vm->next_frontier->backend.queue.data[i]);
     printf("...\n");
     printf("Memory:\n");
-    for(int i = 0; i < 10; i++)
-        printf("%u ", vm->memory[i]);
-    printf("...");
-    for(int i = 10; i > 0; i--)
-        printf("%u ", vm->memory[65536-i]);
+    for(int i = 0; i < 25; i++) {
+        float f;
+        memcpy(&f, &vm->memory[i], sizeof(f));
+        printf("%0.5f ", f);
+    }
+    printf("...\n");
     printf("\n");
     getchar();
 }
@@ -208,7 +233,9 @@ void exit_hook(graphX_vm_t *vm, int result) {
         printf("\n");
         for(int i = 0; i < 256; i++) {
             for(int j = 0; j < 256; j++) {
-                printf("%u ", vm->memory[(256*i) + j]);
+                float f;
+                memcpy(&f, &vm->memory[(256*i) + j], sizeof(f));
+                printf("%0.5f ", f);
             }
             printf("\n");
         }

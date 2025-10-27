@@ -5,21 +5,17 @@ import math
 class Graph:
     def __init__(self, graph_matrix: list[list[float]]) -> None:
         self.m = len(graph_matrix)
-        self.n = len(graph_matrix)
         self.col_index = []
-        self.row_index = []
+        self.row_index = [0]
         self.values = []
 
         # Convert to compressed sparse row format
-        col_length = 0
         for i in range(self.m):
-            self.row_index.append(col_length)
-            for j in range(self.n):
-                if int(graph_matrix[i][j]) != 0:
+            for j in range(len(graph_matrix[i])):
+                if graph_matrix[i][j] != 0:
                     self.col_index.append(j)
                     self.values.append(graph_matrix[i][j])
-                    col_length += 1
-        self.row_index.append(col_length)
+            self.row_index.append(len(self.col_index))
 
     def __str__(self):
         '''Print the graph in graphX ASM format'''

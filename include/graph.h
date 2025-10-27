@@ -29,7 +29,7 @@ int32_t graph_get_weight(graph_t *graph, int32_t u, int32_t v);
 int graph_has_edge(graph_t *graph, int32_t u, int32_t v);
 
 /* Get the neighbors of node u */
-uint32_t *graph_get_neighbors(graph_t *graph, int32_t u, int *size);
+int32_t *graph_get_neighbors(graph_t *graph, int32_t u, int *size);
 int graph_init_iterator(graph_iterator_t *it, graph_t *graph, int32_t node);
 int graph_next_neighbor(graph_iterator_t *it, int32_t *neighbor, int32_t *weight);
 
