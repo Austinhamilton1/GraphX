@@ -86,6 +86,15 @@ typedef enum {
     FEMPTY,     // Check if frontier is empty
     FSWAP,      // Swap next frontier and current frontier buffers
     FFILL,      // Fill the frontier with all nodes in graph
+
+    /* Multicore/synchronization */
+    /* These are left unimplemented for the VM */
+    /* (only work on hardware) */
+    PARALLEL,   // Initiate a parallel region
+    BARRIER,    // Wait for all cores to reach before continuing
+    LOCK,       // Mutual exclusion lock
+    UNLOCK,     // Mutual exclusion unlock
+    COREID,     // Get the ID of the current core
 } instruction;
 
 enum {

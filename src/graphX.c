@@ -118,6 +118,11 @@ int decode(graphX_vm_t *vm, uint64_t data) {
     case FEMPTY:
     case FSWAP:
     case FFILL:
+    case PARALLEL:
+    case BARRIER:
+    case LOCK:
+    case UNLOCK:
+    case COREID:
         return 0;
     }
 
@@ -427,6 +432,18 @@ vm_status_t execute(graphX_vm_t *vm) {
         for(int32_t node = 0; node < vm->graph->n; node++) {
             frontier_push(vm->frontier, node);
         }
+        break;
+    
+    /* 
+     * Concurrency doesn't apply to the VM, this is left
+     * to be implemented in hardware. The FPGA implementation
+     * of this VM will include these.
+     */
+    case PARALLEL:
+    case BARRIER:
+    case LOCK:
+    case UNLOCK:
+    case COREID:
         break;
     default:
         return VM_ERROR;
