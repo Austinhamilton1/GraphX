@@ -7,7 +7,7 @@
 init:
     FFILL                           ; Start with a full frontier
     MOVFI Facc, 11                  ; Facc = 11.0f
-    MOVI Racc, 10                   ; Racc = 1
+    MOVI Racc, 10                   ; Racc = 10
     MOVI Rtmp1, 11                  ; Rtmp1 = 11
     MOVFI Ftmp1, 1                  ; Ftmp1 = 1.0f
     DIVF Ftmp1, Ftmp1, Facc         ; Ftmp1 = 1.0f / N
@@ -28,7 +28,7 @@ reset_loop:
     CMP Rtmp2, Rtmp1                ; Check if all values have been moved
     BZ iter
 
-    ADDI Rtmp3, Rtmp2, Rtmp1        ; Rtmp3 = u + N
+    ADD Rtmp3, Rtmp2, Rtmp1         ; Rtmp3 = u + N
     LDRF Ftmp1, Rtmp3               ; Ftmp1 = PR(u)
     STRF Ftmp1, Rtmp2               ; memory[u] = PR(u)
     STRF Fzero, Rtmp3               ; memory[Rtmp3] = 0.0f
