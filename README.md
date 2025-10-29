@@ -29,11 +29,11 @@ Each instruction is 64 bits, divided into the following fields:
 
 | Bits | Field        | Description |
 |------|---------------|-------------|
-| 63–56 | **Opcode** | Operation code specifying the instruction |
-| 55–48 | **Flags** | Operand mode (e.g., integer/float, immediate/register) |
-| 47–40 | **Destination Register (rd)** | Target register for the result |
-| 39–32 | **Source Register 1 (rs1)** | First source operand |
-| 31–0  | **Immediate / Source Register 2 (rs2)** | Immediate value or second operand |
+| 63 – 56 | **Opcode** | Operation code specifying the instruction |
+| 55 – 48 | **Flags** | Operand mode (e.g., integer/float, immediate/register) |
+| 47 – 40 | **Destination Register (rd)** | Target register for the result |
+| 39 – 32 | **Source Register 1 (rs1)** | First source operand |
+| 31 – 0  | **Immediate / Source Register 2 (rs2)** | Immediate value or second operand |
 
 ### Example
 
