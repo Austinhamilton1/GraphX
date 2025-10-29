@@ -59,11 +59,11 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
 | `HALT` | 0 | Halt the execution of the program | N/A | `FLAG_R \| FLAG_N`  |
-| `BZ` | 1 | Conditional branch if zero |  |  |
-| `BNZ` | 2 | Conditional branch if not zero |  |  |
-| `BLT` | 3 | Conditional branch if less than |  |  |
-| `BGE` | 4 | Conditional branch if greater than or equal |  |  |
-| `JMP` | 5 | Unconditional jump |  |  |
+| `BZ` | 1 | Conditional branch if zero | `if(FLAGS == FLAG_ZERO) then PC = Imm` | `FLAG_I \| FLAG_N` |
+| `BNZ` | 2 | Conditional branch if not zero | `if(FLAGS != FLAG_ZERO) then PC = Imm` | `FLAG_I \| FLAG_N` |
+| `BLT` | 3 | Conditional branch if less than | `if(FLAGS == FLAG_NEG) then PC = Imm` | `FLAG_I \| FLAG_N` |
+| `BGE` | 4 | Conditional branch if greater than or equal | `if(FLAGS == FLAG_POS) then  PC = Imm` | `FLAG_I \| FLAG_N` |
+| `JMP` | 5 | Unconditional jump | `PC = Imm` | `FLAG_I \| FLAG_N` |
 
 
 ### Graph Access Instructions
