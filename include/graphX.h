@@ -87,7 +87,7 @@ typedef enum {
     FSWAP,      // Swap next frontier and current frontier buffers
     FFILL,      // Fill the frontier with all nodes in graph
 
-    /* Multicore/synchronization */
+    /* Multicore/synchronization control */
     /* These are left unimplemented for the VM */
     /* (only work on hardware) */
     PARALLEL,   // Initiate a parallel region
@@ -107,6 +107,7 @@ enum {
     R_TMP3,
     R_TMP4,
     R_ZERO,
+    R_CORE,
     R_COUNT,
 };
 
@@ -141,8 +142,9 @@ typedef struct graphX_vm_t {
             int32_t     Rtmp1;                  // Temporary register
             int32_t     Rtmp2;                  // Temporary register
             int32_t     Rtmp3;                  // Temporary register
-            int32_t     Rtmp4;
+            int32_t     Rtmp4;                  // Temporary register
             int32_t     Rzero;                  // Zero register
+            int32_t     Rcore;                  // Core ID register
         };
         int32_t         R[R_COUNT];             // Register indexer
     };
