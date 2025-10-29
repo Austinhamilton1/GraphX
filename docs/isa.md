@@ -58,7 +58,7 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 ### Control Flow
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
-| `HALT` | 0 | Halt the execution of the program | N/A | `FLAG_R | FLAG_N`  |
+| `HALT` | 0 | Halt the execution of the program | N/A | `FLAG_R \| FLAG_N`  |
 | `BZ` | 1 | Conditional branch if zero |  |  |
 | `BNZ` | 2 | Conditional branch if not zero |  |  |
 | `BLT` | 3 | Conditional branch if less than |  |  |
