@@ -79,10 +79,10 @@ typedef enum {
     STR,        // Store to register address
     LDRF,       // Load float from register address
     STRF,       // Store float to register address
-    PUSH,       // Add neighbor to next frontier
-    POP,        // Load next node from frontier
 
     /* Frontier control */
+    PUSH,       // Add neighbor to next frontier
+    POP,        // Load next node from frontier
     FEMPTY,     // Check if frontier is empty
     FSWAP,      // Swap next frontier and current frontier buffers
     FFILL,      // Fill the frontier with all nodes in graph
@@ -94,7 +94,6 @@ typedef enum {
     BARRIER,    // Wait for all cores to reach before continuing
     LOCK,       // Mutual exclusion lock
     UNLOCK,     // Mutual exclusion unlock
-    COREID,     // Get the ID of the current core
 } instruction;
 
 enum {
