@@ -90,8 +90,8 @@ int decode(graphX_vm_t *vm, uint64_t data) {
     case MOVC:
     case LD:
     case ST:
-    case PUSH:
-    case POP:
+    case FPUSH:
+    case FPOP:
     case FEMPTY:
     case FSWAP:
     case FFILL:
@@ -375,11 +375,11 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             }
         }
         break;
-    case PUSH:
+    case FPUSH:
         // Push to the next frontier
         frontier_push(vm->next_frontier, vm->R[arg1]);
         break;
-    case POP:
+    case FPOP:
         // Pop from the frontier
         frontier_pop(vm->frontier, &vm->R[arg1]);
         break;

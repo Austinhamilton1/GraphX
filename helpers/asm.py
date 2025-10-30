@@ -45,8 +45,8 @@ OPCODES = {
     'MOVC': 18,     # Cast a register to a float register
     'LD': 19,       # Load register from memory
     'ST': 20,       # Store register to memory
-    'PUSH': 21,     # Add neighbor to next frontier
-    'POP': 22,      # Load next node from frontier
+    'FPUSH': 21,    # Add neighbor to next frontier
+    'FPOP': 22,     # Load next node from frontier
     'FEMPTY': 23,   # Check if frontier is empty
     'FSWAP': 24,    # Swap next frontier and current frontier buffers
     'FFILL': 25,    # Fill the frontier with all nodes in graph
@@ -143,7 +143,7 @@ def encode_instruction(op, args):
         return opcode | (flags << 48) | (r0 << 40) | r1
 
     # Register operations
-    elif op in ['PUSH', 'POP', 'DEG']:
+    elif op in ['FPUSH', 'FPOP', 'DEG']:
         r = int(args[0]) & REGISTER_ARG_MASK
         return opcode | (r << 40)
 

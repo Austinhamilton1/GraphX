@@ -90,8 +90,8 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 ### Frontier Control
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
-| `PUSH` | 21 | Push an integer register to the next frontier | `push(next_frontier, Dest)` | None |
-| `POP` | 22 | Pop a node from the frontier into an integer register | `Dest = pop(frontier)` | None |
+| `FPUSH` | 21 | Push an integer register to the next frontier | `push(next_frontier, Dest)` | None |
+| `FPOP` | 22 | Pop a node from the frontier into an integer register | `Dest = pop(frontier)` | None |
 | `FEMPTY` | 23 | Check if frontier is empty and set `FLAGS` | `if(empty(froniter)) then FLAGS = FLAG_ZERO; else FLAGS = ~FLAG_ZERO` | None |
 | `FSWAP` | 24 | Swap the frontier with the next frontier | `swap(frontier, next_frontier)` | None |
 | `FFILL` | 25 | Fill the frontier with all nodes in the graph | `for(node in graph_nodes) do push(froniter, node)` | None |
@@ -107,13 +107,305 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 ## Instruction Semantics
 
 ### `HALT`
+ - **Opcode:** 0x0
+ - **Operands:** None (flags ignored)
+ - **Effect:**
+    - Suspends the execution of the VM.
+ - **Usage:**
+ ```
+ CMP Rzero, Rzero
+ BZ done
+
+ done:
+    HALT    ; Program is finished
+ ```
 
 ### `BZ`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
 
 ### `BNZ`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
 
 ### `BLT`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
 
 ### `BGE`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
 
 ### `JMP`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `NITER`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `NNEXT`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `EITER`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `ENEXT`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `HASE`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `DEG`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `ADD`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `SUB`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `MULT`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `DIV`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `CMP`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `MOV`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `MOVC`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `LD`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `ST`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `FPUSH`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `FPOP`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `FEMPTY`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `FSWAP`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `FFILL`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `PARALLEL`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `BARRIER`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `LOCK`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```
+
+### `UNLOCK`
+ - **Opcode:** 0x
+ - **Operands:** 
+ - **Effect:**
+    -
+ - **Usage:**
+ ```
+
+ ```

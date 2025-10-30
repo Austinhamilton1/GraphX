@@ -56,8 +56,8 @@ typedef enum {
     ST,         // Store register to memory
 
     /* Frontier control */
-    PUSH,       // Add neighbor to next frontier
-    POP,        // Load next node from frontier
+    FPUSH,      // Add neighbor to next frontier
+    FPOP,       // Load next node from frontier
     FEMPTY,     // Check if frontier is empty
     FSWAP,      // Swap next frontier and current frontier buffers
     FFILL,      // Fill the frontier with all nodes in graph

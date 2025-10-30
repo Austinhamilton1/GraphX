@@ -16,7 +16,7 @@ init_loop:
     FEMPTY                          ; Check for empty frontier 
     BZ iter
 
-    POP Rnode                       ; Rnode = u
+    FPOP Rnode                       ; Rnode = u
 
     ST Ftmp1, Rnode                 ; memory[u] = 1 / N
     JMP init_loop
@@ -61,7 +61,7 @@ outer_loop:
     FEMPTY                          ; Check if frontier is empty
     BZ reset_mem
 
-    POP Rnbr                        ; Rnbr = u
+    FPOP Rnbr                        ; Rnbr = u
     MOV Ftmp2, Ftmp1                ; Ftmp2 = (1.0f - 0.85) / N
 
     FSWAP                           ; Need a second iteration of nodes
@@ -71,7 +71,7 @@ inner_loop:
     FEMPTY                          ; Check if frontier is empty
     BZ swap_back
 
-    POP Rnode                       ; Rnode = v
+    FPOP Rnode                       ; Rnode = v
     HASE                            ; Check if v -> u
     BZ inner_loop
 
