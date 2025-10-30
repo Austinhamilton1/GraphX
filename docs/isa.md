@@ -117,7 +117,6 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 CMP Rtmp1, Rzero
 BZ done
 ...
-
 done:
     HALT                    ; Program is finished
 ```
@@ -141,7 +140,6 @@ loop:
     SUB Rtmp1, Rtmp1, #1
     JMP loop
 ...
-
 done:
     HALT
 ```
@@ -157,7 +155,7 @@ done:
         - Continue execution
  - **Usage:**
 ```
- ...
+...
 loop:
     FPOP Rnode
 
@@ -325,76 +323,137 @@ MOV Rtmp2, Rval
 
 ### `ADD`
  - **Opcode:** 0xC
- - **Operands:** 
+ - **Operands:** Destination register, first source register, second source register or immediate value (`FLAG_I` determines register/immediate, `FLAG_F` determines integer/float)
  - **Effect:**
-    -
+    - Add `Src2/Imm` to `Src1`
+    - Store result in `Dest`
  - **Usage:**
 ```
-
+...
+ADD Rtmp1, Rtmp1, Rtmp2     ; Rtmp1 += Rtmp2
+...
+ADD Rtmp1, Rtmp1, #1        ; Rtmp1 += 1
+...
+ADD Ftmp1, Ftmp1, Ftmp2     ; Ftmp1 += Ftmp2
+...
+ADD Ftmp1, Ftmp1, #0.43     ; Ftmp1 += 0.43
+...
 ```
 
 ### `SUB`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0xD
+ - **Operands:** Destination register, first source register, second source register or immediate value (`FLAG_I` determines register/immediate, `FLAG_F` determines integer/float)
  - **Effect:**
-    -
+    - Subtract `Src2/Imm` from `Src1`
+    - Store result in `Dest`
  - **Usage:**
 ```
-
+...
+SUB Rtmp4, Rtmp1, Rtmp2     ; Rtmp4 = Rtmp1 - Rtmp2
+...
+SUB Rtmp4, Rtmp1, #8        ; Rtmp4 = Rtmp1 - 8
+...
+SUB Ftmp4, Ftmp6, Ftmp2     ; Ftmp4 = Ftmp6 - Ftmp2
+...
+SUB Ftmp1, Ftmp10, #12.9    ; Ftmp1 = Ftmp10 - 12.9
+...
 ```
 
 ### `MULT`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0xE
+ - **Operands:** Destination register, first source register, second source register or immediate value (`FLAG_I` determines register/immediate, `FLAG_F` determines integer/float)
  - **Effect:**
-    -
+    - Multiply `Src1` by `Src2/Imm`
+    - Store result in `Dest`
  - **Usage:**
 ```
-
+...
+MULT Rtmp5, Rtmp9, Rtmp2    ; Rtmp5 = Rtmp9 * Rtmp2
+...
+MULT Rtmp16, Rtmp16, #8     ; Rtmp16 *= 8
+...
+MULT Ftmp1, Ftmp3, Ftmp12   ; Ftmp1 = Ftmp3 * Ftmp12
+...
+MULT Ftmp5, Ftmp5, #19.477  ; Ftmp5 *= 19.477
+...
 ```
 
 ### `DIV`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0xF
+ - **Operands:** Destination register, first source register, second source register or immediate value (`FLAG_I` determines register/immediate, `FLAG_F` determines integer/float)
  - **Effect:**
-    -
+    - Divide `Src1` by `Src2/Imm`
+    - Store result in `Dest`
  - **Usage:**
 ```
-
+...
+DIV Rtmp1, Rtmp3, Rtmp7     ; Rtmp1 = Rtmp3 / Rtmp7
+...
+DIV Rtmp5, Rtmp9, #2        ; Rtmp5 = Rtmp9 / 2
+...
+DIV Ftmp9, Ftmp12, Ftmp2    ; Ftmp9 = Ftmp12 / Ftmp2
+...
+DIV Ftmp10, Ftmp13, #7.8    ; Ftmp10 = Ftmp13 / 7.8
+...
 ```
 
 ### `CMP`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x10
+ - **Operands:** Two registers (`FLAG_F` determines if they are integer or float)
  - **Effect:**
-    -
+    - `result = Src1 - Src2`
+    - if `result == 0` then
+        - `FLAGS = FLAG_ZERO`
+    - else if `result < 0` then
+        - `FLAGS = FLAG_NEG`
+    - else
+        - `FLAGS = FLAG_POS`
  - **Usage:**
 ```
-
+...
+CMP Rtmp1, Rzero            ; Compare Rtmp1 with 0
+BZ done
+...
+CMP Ftmp5, Facc             ; Compare Ftmp5 with Facc     
+BLT loop
+...
 ```
 
 ### `MOV`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x11
+ - **Operands:** Destination register, source register or immediate value (`FLAG_I` determines register/immediate, `FLAG_F` determines integer/float)
  - **Effect:**
-    -
+    - Store `Src1/Imm` in `Dest`
  - **Usage:**
 ```
-
+...
+MOV Rtmp1, Racc             ; Rtmp1 = Racc
+...
+MOV Rtmp4, #18              ; Rtmp4 = 18
+...
+MOV Ftmp4, Ftmp2            ; Ftmp4 = Ftmp2
+...
+MOV Ftmp14, #38.9           ; Ftmp14 = 38.9
+...
 ```
 
 ### `MOVC`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x12
+ - **Operands:** Destination register, source register (`FLAG_F` determines if converting float->integer or integer->float)
  - **Effect:**
-    -
+    - Convert `Src1` to `Dest` type
+    - Store converted value in `Dest`
  - **Usage:**
 ```
-
+...
+MOVC Rtmp1, Ftmp1           ; Rtmp1 = (int32_t)Ftmp1
+...
+MOVC Ftmp2, Rtmp4           ; Ftmp2 = (float)Rtmp4
+...
 ```
 
 ### `LD`
- - **Opcode:** 0x
+ - **Opcode:** 0x13
  - **Operands:** 
  - **Effect:**
     -
@@ -404,7 +463,7 @@ MOV Rtmp2, Rval
 ```
 
 ### `ST`
- - **Opcode:** 0x
+ - **Opcode:** 0x14
  - **Operands:** 
  - **Effect:**
     -
@@ -414,91 +473,121 @@ MOV Rtmp2, Rval
 ```
 
 ### `FPUSH`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x15
+ - **Operands:** Node register (flags ignored)
  - **Effect:**
-    -
+    - Add the node into the back frontier
  - **Usage:**
 ```
-
+...
+FPUSH Rnode                 ; Rnode is added to the back of the back frontier 
+...
+FSWAP
+FPOP Rnode
+...
 ```
 
 ### `FPOP`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x16
+ - **Operands:** Node register (flags ignored)
  - **Effect:**
-    -
+    - Get the front of the current frontier and put it in a register
  - **Usage:**
 ```
-
+...
+FPUSH Rnode
+FSWAP
+FPOP Rtmp1                  ; Rtmp1 now has the old Rnode in it 
+...
 ```
 
 ### `FEMPTY`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x17
+ - **Operands:** None (flags ignored)
  - **Effect:**
-    -
+    - Check if the current frontier is empty
+    - If it is:
+        - `FLAGS` = `~FLAG_ZERO`
+    - Otherwise
+        - `FLAGS` = `FLAG_ZERO`
  - **Usage:**
 ```
-
+...
+FPUSH Rnode
+FSWAP
+FEMPTY                      ; Frontier has old Rnode in it
+BZ done
+FPOP Rnode
+FEMPTY                      ; After popping, frontier should be empty now
+BZ done
+...
 ```
 
 ### `FSWAP`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x18
+ - **Operands:** None (flags ignored)
  - **Effect:**
-    -
+    - Swap back and front frontiers
+        - Current frontier = back frontier
+        - Back frontier = old frontier
  - **Usage:**
 ```
-
+...
+FPUSH Rnode
+FSWAP                       ; Frontier with Rnode in it is now current frontier
+FPOP Rtmp1
+...
 ```
 
 ### `FFILL`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x10
+ - **Operands:** None (flags ignored)
  - **Effect:**
-    -
+    - Current frontier is filled with all nodes in graph
  - **Usage:**
 ```
-
+...
+FFILL                       ; All nodes should now be in current frontier
+FPOP Rnode
+...
 ```
 
 ### `PARALLEL`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x20
+ - **Operands:** Not implemented yet 
  - **Effect:**
-    -
+    - Not implemented yet
  - **Usage:**
 ```
-
+Not implemented yet
 ```
 
 ### `BARRIER`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x21
+ - **Operands:** Not implemented yet
  - **Effect:**
-    -
+    - Not implemented yet
  - **Usage:**
 ```
-
+Not implemented yet
 ```
 
 ### `LOCK`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x22
+ - **Operands:** Not implemented yet
  - **Effect:**
-    -
+    - Not implemented yet
  - **Usage:**
 ```
-
+Not implemented yet
 ```
 
 ### `UNLOCK`
- - **Opcode:** 0x
- - **Operands:** 
- - **Effect:**
-    -
+ - **Opcode:** 0x23
+ - **Operands:** Not implemented yet
+ - **Effect:** 
+    - Not implemented yet
  - **Usage:**
 ```
-
+Not implemented yet
 ```
