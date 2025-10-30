@@ -15,10 +15,8 @@
 #define ARG3(vm) (vm->A2)   // Third argument of instruction
 #define FARG(vm) (vm->FA)   // Third argument of instruction (if float type instruction)
 
-#define FLAG_R      0x1     // Instruction is R-type
-#define FLAG_I      0x2     // Instruction is I-type
-#define FLAG_N      0x4     // Instruction is integer type
-#define FLAG_F      0x8     // Instruction is float type
+#define FLAG_I      0x1     // Instruction is I-type
+#define FLAG_F      0x2     // Instruction is float type
 
 #define FLAG_ZERO   0x1     // Check if CMP resulted in zero
 #define FLAG_NEG    0x2     // Check if CMP resulted in negative
@@ -46,27 +44,17 @@ typedef enum {
     
     /* Arithmetic and logic*/
     ADD,        // Add two registers
-    ADDI,       // Add immediate value to register
     ADDF,       // Add two float registers
-    ADDFI,      // Add immediate float value to float register
     SUB,        // Subtract two registers,
-    SUBI,       // Subtract immediate value from register
     SUBF,       // Subtract two float registers
-    SUBFI,      // Subtract immediate float value from float register
     MULT,       // Multiply two registers
-    MULTI,      // Multiply a register by an immediate value
     DIV,        // Divide two registers
-    DIVI,       // Divide a register by an immediate value
     MULTF,      // Multiply two float registers
-    MULTFI,     // Multiply a float register by a float immediate
     DIVF,       // Divide two float registers
-    DIVFI,      // Divide a float register by a float immediate
     CMP,        // Compare, set FLAGS
     CMPF,       // Compare float, set FLAGS
     MOV,        // Move register
-    MOVI,       // Move immediate
     MOVF,       // Move float register
-    MOVFI,      // Move immediate float
     MOVC,       // Cast a register to a float register
     MOVCF,      // Cast a float register to a register
 
@@ -75,10 +63,6 @@ typedef enum {
     ST,         // Store register to memory
     LDF,        // Load float register from memory
     STF,        // Store float register to memory
-    LDR,        // Load from register address
-    STR,        // Store to register address
-    LDRF,       // Load float from register address
-    STRF,       // Store float to register address
 
     /* Frontier control */
     PUSH,       // Add neighbor to next frontier
@@ -105,6 +89,18 @@ enum {
     R_TMP2,
     R_TMP3,
     R_TMP4,
+    R_TMP5,
+    R_TMP6,
+    R_TMP7,
+    R_TMP8,
+    R_TMP9,
+    R_TMP10,
+    R_TMP11,
+    R_TMP12,
+    R_TMP13,
+    R_TMP14,
+    R_TMP15,
+    R_TMP16,
     R_ZERO,
     R_CORE,
     R_COUNT,
@@ -116,6 +112,18 @@ enum {
     F_TMP2,
     F_TMP3,
     F_TMP4,
+    F_TMP5,
+    F_TMP6,
+    F_TMP7,
+    F_TMP8,
+    F_TMP9,
+    F_TMP10,
+    F_TMP11,
+    F_TMP12,
+    F_TMP13,
+    F_TMP14,
+    F_TMP15,
+    F_TMP16,
     F_ZERO,
     F_COUNT,
 };
@@ -142,6 +150,18 @@ typedef struct graphX_vm_t {
             int32_t     Rtmp2;                  // Temporary register
             int32_t     Rtmp3;                  // Temporary register
             int32_t     Rtmp4;                  // Temporary register
+            int32_t     Rtmp5;                  // Temporary register
+            int32_t     Rtmp6;                  // Temporary register
+            int32_t     Rtmp7;                  // Temporary register
+            int32_t     Rtmp8;                  // Temporary register
+            int32_t     Rtmp9;                  // Temporary register
+            int32_t     Rtmp10;                  // Temporary register
+            int32_t     Rtmp11;                  // Temporary register
+            int32_t     Rtmp12;                  // Temporary register
+            int32_t     Rtmp13;                  // Temporary register
+            int32_t     Rtmp14;                  // Temporary register
+            int32_t     Rtmp15;                  // Temporary register
+            int32_t     Rtmp16;                  // Temporary register
             int32_t     Rzero;                  // Zero register
             int32_t     Rcore;                  // Core ID register
         };
@@ -155,7 +175,19 @@ typedef struct graphX_vm_t {
             float       Ftmp1;                  // Temporary float register
             float       Ftmp2;                  // Temporary float register
             float       Ftmp3;                  // Temporary float register
-            float       Ftmp4;
+            float       Ftmp4;                  // Temporary float register
+            float       Ftmp5;                  // Temporary float register
+            float       Ftmp6;                  // Temporary float register
+            float       Ftmp7;                  // Temporary float register
+            float       Ftmp8;                  // Temporary float register
+            float       Ftmp9;                  // Temporary float register
+            float       Ftmp10;                  // Temporary float register
+            float       Ftmp11;                  // Temporary float register
+            float       Ftmp12;                  // Temporary float register
+            float       Ftmp13;                  // Temporary float register
+            float       Ftmp14;                  // Temporary float register
+            float       Ftmp15;                  // Temporary float register
+            float       Ftmp16;                  // Temporary float register
             float       Fzero;                  // Zero float register
         };
         float           F[F_COUNT];             // Register indexer
@@ -183,7 +215,7 @@ typedef struct graphX_vm_t {
 /* Functions needed to run instructions */
 uint64_t fetch(graphX_vm_t *vm);
 int decode(graphX_vm_t *vm, uint64_t data);
-vm_status_t execute(graphX_vm_t *vm);
+vm_status_t execute(graphX_vm_t *vm, int flags);
 
 /* Run a graphX program */
 vm_status_t run(graphX_vm_t *vm);

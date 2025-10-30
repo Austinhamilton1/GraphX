@@ -2,8 +2,8 @@
 ;;; Brute force method
 
 .code
-MOVI Racc, 0                ; Final Count
-MOVI Rtmp1, 24              ; Current node
+MOV Racc, #0                ; Final Count
+MOV Rtmp1, #24              ; Current node
 
 loop:                       ; Main loop
     ; Check for exit condition ;
@@ -14,7 +14,7 @@ loop:                       ; Main loop
     MOV Rnode, Rtmp1
     NITER 0
 
-    SUBI Rtmp1, Rtmp1, 1      ; Increment pointer
+    SUB Rtmp1, Rtmp1, #1      ; Increment pointer
 
 a_loop:
     NNEXT 0                 ; Get the next neighbor
@@ -49,12 +49,12 @@ b_loop:
     JMP b_loop
 
 found_triangle:
-    ADDI, Racc, Racc, 1
+    ADD, Racc, Racc, #1
     MOV Rnode, Rtmp3
     JMP b_loop
 
 done:
-    ST Racc, 0              ; Store the final result
+    ST Racc, #0              ; Store the final result
     HALT
 
 ;;; This is a lattice graph. 5x5. For each sqaure in

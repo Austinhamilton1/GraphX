@@ -18,10 +18,8 @@ import sys
 OPCODE_ARG_MASK         = 0x000000FF 
 REGISTER_ARG_MASK       = 0x000000FF 
 IMMEDIATE_ARG_MASK      = 0xFFFFFFFF
-FLAG_R                  = 0x00000001
-FLAG_I                  = 0x00000002
-FLAG_N                  = 0x00000004
-FLAG_F                  = 0x00000008
+FLAG_I                  = 0x00000001
+FLAG_F                  = 0x00000002
 
 '''=== Instruction Encoding ====================================================='''
 
@@ -39,42 +37,32 @@ OPCODES = {
     'HASE': 10,     # Check if there is an edge between Rnode and input node
     'DEG': 11,      # Store the degree of a node in a register
     'ADD': 12,      # Add registers
-    'ADDI': 13,     # Add immediate value
-    'ADDF': 14,     # Add float registers
-    'ADDFI': 15,    # Add immediate float value
-    'SUB': 16,      # Subtract registers,
-    'SUBI': 17,     # Subtract immediate value
-    'SUBF': 18,     # Subtract float registers
-    'SUBFI': 19,    # Subtract immediate float value
-    'MULT': 20,     # Multiply registers
-    'MULTI': 21,    # Multiply register by immediate
-    'DIV': 22,      # Divide two registers
-    'DIVI': 23,     # Divide register by immediate
-    'MULTF': 24,    # Multiply two float registers
-    'MULTFI': 25,   # Multiply float register by float immediate
-    'DIVF': 26,     # Divide float registers
-    'DIVFI': 27,    # Divide float register by float immediate
-    'CMP': 28,      # Compare, set FLAGS
-    'CMPF': 29,     # Compare floats, set FLAGS
-    'MOV': 30,      # Move
-    'MOVI': 31,     # Move immediate
-    'MOVF': 32,     # Move float
-    'MOVFI': 33,    # Move float immediate
-    'MOVC': 34,     # Cast a register to a float register
-    'MOVCF': 35,    # Cast a float register to a register
-    'LD': 36,       # Load register from memory
-    'ST': 37,       # Store register to memory
-    'LDF': 38,      # Load float register from memory
-    'STF': 39,      # Store float register to memory
-    'LDR': 40,      # Load from register address
-    'STR': 41,      # Store to register address
-    'LDRF': 42,     # Load float from register address
-    'STRF': 43,     # Store float to register address
-    'PUSH': 44,     # Add neighbor to next frontier
-    'POP': 45,      # Load next node from frontier
-    'FEMPTY': 46,   # Check if frontier is empty
-    'FSWAP': 47,    # Swap next frontier and current frontier buffers
-    'FFILL': 48,    # Fill the frontier with all nodes in graph
+    'ADDF': 13,     # Add float registers
+    'SUB': 14,      # Subtract registers
+    'SUBF': 15,     # Subtract float registers
+    'MULT': 16,     # Multiply registers
+    'DIV': 17,      # Divide two registers
+    'MULTF': 18,    # Multiply two float registers
+    'DIVF': 19,     # Divide float registers
+    'CMP': 20,      # Compare, set FLAGS
+    'CMPF': 21,     # Compare floats, set FLAGS
+    'MOV': 22,      # Move
+    'MOVF': 23,     # Move float
+    'MOVC': 24,     # Cast a register to a float register
+    'MOVCF': 25,    # Cast a float register to a register
+    'LD': 26,       # Load register from memory
+    'ST': 27,       # Store register to memory
+    'LDF': 28,      # Load float register from memory
+    'STF': 29,      # Store float register to memory
+    'PUSH': 30,     # Add neighbor to next frontier
+    'POP': 31,      # Load next node from frontier
+    'FEMPTY': 32,   # Check if frontier is empty
+    'FSWAP': 33,    # Swap next frontier and current frontier buffers
+    'FFILL': 34,    # Fill the frontier with all nodes in graph
+    'PARALLEL': 35, # Run next block of code with multicore mode
+    'BARRIER': 36,  # Wait until all cores reach this code before continuing
+    'LOCK': 37,     # Mutual exclusion lock on a resource
+    'UNLOCK': 38,   # Unlock mutual exclusion lock
 }
 
 def encode_instruction(op, args):
@@ -86,72 +74,76 @@ def encode_instruction(op, args):
     opcode = OPCODES[op] << 56
 
     # No argument operations
-    if op in ['HALT', 'EITER', 'ENEXT', 'FEMPTY', 'FSWAP', 'HASE', 'FFILL']:
-        return opcode | (FLAG_R << 48) | (FLAG_N << 48)
+    if op in ['HALT', 'EITER', 'ENEXT', 'FEMPTY', 'FSWAP', 'HASE', 'FFILL', 'PARALLEL', 'BARRIER']:
+        return opcode
     
-    # Immediate operations
-    elif op in ['BZ', 'BNZ', 'BLT', 'BGE', 'JMP', 'NITER', 'NNEXT']:
+    # I operations
+    elif op in ['BZ', 'BNZ', 'BLT', 'BGE', 'JMP', 'NITER', 'NNEXT', 'LOCK', 'UNLOCK']:
         imm = int(args[0]) & IMMEDIATE_ARG_MASK
-        return opcode | (FLAG_I << 48) | (FLAG_N << 48) | imm
+        return opcode | (FLAG_I << 48) | imm
     
-    # Register-Register-Register integer operations
+    # R-R-R/I integer operations
     elif op in ['ADD', 'SUB', 'MULT', 'DIV']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
         r1 = int(args[1]) & REGISTER_ARG_MASK
-        r2 = int(args[2]) & REGISTER_ARG_MASK
-        return opcode | (FLAG_R << 48) | (FLAG_N << 48) | (r0 << 40) | (r1 << 32) | (r2 << 24)
+        
+        # Check for immediate instruction
+        if args[2].startswith('#'):
+            r2 = int(args[2][1:]) & IMMEDIATE_ARG_MASK
+            flags = FLAG_I
+        else:
+            r2 = (int(args[2]) & REGISTER_ARG_MASK) << 24
+            flags = 0x0
+
+        return opcode | (flags << 48) | (r0 << 40) | (r1 << 32) | r2
     
-    # Register-Register-Register float operations
+    # R-R-R/I float operations
     elif op in ['ADDF', 'SUBF', 'MULTF', 'DIVF']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
         r1 = int(args[1]) & REGISTER_ARG_MASK
-        r2 = int(args[2]) & REGISTER_ARG_MASK
-        return opcode | (FLAG_R << 48) | (FLAG_F << 48) | (r0 << 40) | (r1 << 32) | (r2 << 24)
 
-    # Register-Register-Immediate integer operations
-    elif op in ['ADDI', 'SUBI', 'MULTI', 'DIVI']:
-        r0 = int(args[0]) & REGISTER_ARG_MASK
-        r1 = int(args[1]) & REGISTER_ARG_MASK
-        imm = int(args[2]) & IMMEDIATE_ARG_MASK
-        return opcode | (FLAG_I << 48) | (FLAG_N << 48) | (r0 << 40) | (r1 << 32) | imm
+        # Check for immediate instruction
+        if args[2].startswith('#'):
+            r2 = struct.unpack('<I', struct.pack('<f', float(args[2][1:])))[0] & IMMEDIATE_ARG_MASK
+            flags = FLAG_I | FLAG_F
+        else:
+            r2 = (int(args[2]) & REGISTER_ARG_MASK) << 24
+            flags = FLAG_F
+
+        return opcode | (flags << 48) | (r0 << 40) | (r1 << 32) | r2
     
-    # Register-Register-Immediate float operations
-    elif op in ['ADDFI', 'SUBFI', 'MULTFI', 'DIVFI']:
+    # R-R/I integer operations
+    elif op in ['MOV', 'CMP', 'MOVC', 'LD', 'ST']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
-        r1 = int(args[1]) & REGISTER_ARG_MASK
-        imm = float(args[2])
-        imm_bits = struct.unpack('<I', struct.pack('<f', imm))[0] & IMMEDIATE_ARG_MASK
-        return opcode | (FLAG_I << 48) | (FLAG_F << 48) | (r0 << 40) | (r1 << 32) | imm_bits
 
-    # Register-Register integer operations
-    elif op in ['CMP', 'MOV', 'LDR', 'STR', 'MOVC']:
+        # Check for immediate instruction
+        if args[1].startswith('#'):
+            r1 = int(args[1][1:]) & IMMEDIATE_ARG_MASK
+            flags = FLAG_I
+        else:
+            r1 = (int(args[1]) & REGISTER_ARG_MASK) << 32
+            flags = 0x0
+
+        return opcode | (flags << 48) | (r0 << 40) | r1
+
+    # R-R/I float operations
+    elif op in ['MOVF', 'CMPF', 'MOVCF', 'LDF', 'STF']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
-        r1 = int(args[1]) & REGISTER_ARG_MASK
-        return opcode | (FLAG_R << 48) | (FLAG_N << 48) | (r0 << 40) | (r1 << 32)
 
-    # Register-Register float operations
-    elif op in ['CMPF', 'MOVF', 'LDRF', 'STRF', 'MOVCF']:
-        r0 = int(args[0]) & REGISTER_ARG_MASK
-        r1 = int(args[1]) & REGISTER_ARG_MASK
-        return opcode | (FLAG_R << 48) | (FLAG_F << 48) | (r0 << 40) | (r1 << 32)
+        # Check for immediate instruction
+        if args[1].startswith('#'):
+            r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
+            flags = FLAG_I | FLAG_F
+        else:
+            r1 = (int(args[1]) & REGISTER_ARG_MASK) << 32
+            flags = FLAG_F
 
-    # Register-Immediate integer operations
-    elif op in ['MOVI', 'LD', 'ST']:
-        r = int(args[0]) & REGISTER_ARG_MASK
-        imm = int(args[1]) & IMMEDIATE_ARG_MASK
-        return opcode | (FLAG_I << 48) | (FLAG_N << 48) | (r << 40) | imm
-
-    # Register-Immediate float operations
-    elif op in ['MOVFI', 'LDF', 'STF']:
-        r = int(args[0]) & REGISTER_ARG_MASK
-        imm = float(args[1])
-        imm_bits = struct.unpack('<I', struct.pack('<f', imm))[0] & IMMEDIATE_ARG_MASK
-        return opcode | (FLAG_I << 48) | (FLAG_F << 48) | (r << 40) | imm_bits
+        return opcode | (flags << 48) | (r0 << 40) | r1
 
     # Register operations
     elif op in ['PUSH', 'POP', 'DEG']:
         r = int(args[0]) & REGISTER_ARG_MASK
-        return opcode | (FLAG_R << 48) | (FLAG_N << 48) | (r << 40)
+        return opcode | (r << 40)
 
     # Invalid opcode
     else:
@@ -175,13 +167,38 @@ def parse_assembly(lines):
         'Rtmp2': 5,
         'Rtmp3': 6,
         'Rtmp4': 7,
-        'Rzero': 8,
+        'Rtmp5': 8,
+        'Rtmp6': 9,
+        'Rtmp7': 10,
+        'Rtmp8': 11,
+        'Rtmp9': 12,
+        'Rtmp10': 13,
+        'Rtmp11': 14,
+        'Rtmp12': 15,
+        'Rtmp13': 16,
+        'Rtmp14': 17,
+        'Rtmp15': 18,
+        'Rtmp16': 19,
+        'Rzero': 20,
+        'Rcore': 21,
         'Facc': 0,
         'Ftmp1': 1,
         'Ftmp2': 2,
         'Ftmp3': 3,
         'Ftmp4': 4,
-        'Fzero': 5,
+        'Ftmp5': 5,
+        'Ftmp6': 6,
+        'Ftmp7': 7,
+        'Ftmp8': 8,
+        'Ftmp9': 9,
+        'Ftmp10': 10,
+        'Ftmp11': 11,
+        'Ftmp12': 12,
+        'Ftmp13': 13,
+        'Ftmp14': 14,
+        'Ftmp15': 15,
+        'Ftmp16': 16,
+        'Fzero': 17,
     }
     pc = 0
 
@@ -238,9 +255,9 @@ def parse_assembly(lines):
             # Substitute Register names and label names
             for i in range(len(args)):
                 if args[i] in register_names:
-                    args[i] = register_names[args[i]]
+                    args[i] = str(register_names[args[i]])
                 elif args[i] in code_labels:
-                    args[i] = code_labels[args[i]]
+                    args[i] = str(code_labels[args[i]])
 
             code.append(encode_instruction(op, args))
 
@@ -269,7 +286,10 @@ def parse_assembly(lines):
             tokens = re.split(r'[,\s]+', line)
             for token in tokens:
                 # Allow decimal or hex
-                mem.append(int(token, 0))
+                if token.endswith('f'):
+                    mem.append(float(token, 0))
+                else:
+                    mem.append(int(token, 0))
                 
     return code, data, mem
 

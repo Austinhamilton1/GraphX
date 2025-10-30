@@ -27,42 +27,32 @@ static const char *opcodes[] = {
     "HASE",
     "DEG",
     "ADD",
-    "ADDI",
     "ADDF",
-    "ADDFI",
     "SUB",
-    "SUBI",
     "SUBF",
-    "SUBFI",
     "MULT",
-    "MULTI",
     "MULTF",
-    "MULTFI",
     "DIV",
-    "DIVI",
     "DIVF",
-    "DIVFI",
     "CMP",
     "CMPF",
     "MOV",
-    "MOVI",
     "MOVF",
-    "MOVFI",
     "MOVC",
     "MOVCF",
     "LD",
     "ST",
     "LDF",
     "STF",
-    "LDR",
-    "STR",
-    "LDRF",
-    "STRF",
     "PUSH",
     "POP",
     "FEMPTY",
     "FSWAP",
     "FFILL",
+    "PARALLEL",
+    "BARRIER",
+    "LOCK",
+    "UNLOCK",
 };
 
 int main(int argc, char **argv) {
@@ -218,6 +208,26 @@ void debug_hook(graphX_vm_t *vm) {
     getchar();
 }
 
+static void print_mem_int(int32_t *memory) {
+    for(int i = 0; i < 256; i++) {
+        for(int j = 0; j < 256; j++) {
+            printf("%u ", memory[(256*i) + j]);
+        }
+        printf("\n");
+    }
+}
+
+static void print_mem_float(int32_t *memory) {
+    for(int i = 0; i < 256; i++) {
+        for(int j = 0; j < 256; j++) {
+            float f;
+            memcpy(&f, &memory[(256*i) + j], sizeof(f));
+            printf("%0.5f ", f);
+        }
+        printf("\n");
+    }
+}
+
 /*
  * Exit callback for the graphX VM.
  *
@@ -231,14 +241,7 @@ void exit_hook(graphX_vm_t *vm, int result) {
         printf("Total number of instructions: %lu\n", vm->clock);
         printf("Memory at end of program:\n");
         printf("\n");
-        for(int i = 0; i < 256; i++) {
-            for(int j = 0; j < 256; j++) {
-                float f;
-                memcpy(&f, &vm->memory[(256*i) + j], sizeof(f));
-                printf("%0.5f ", f);
-            }
-            printf("\n");
-        }
+        print_mem_float(vm->memory);
     } else if(result == VM_ERROR) {
         printf("VM execution failed.\n");
         vm->PC--; // Get the last executed instruction
