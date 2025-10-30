@@ -43,10 +43,8 @@ Each instruction is 64 bits, divided into the following fields:
 
 ### Operand Modes
 The **flags** field determines how operands are interpreted:
-- `0x01`: Register operation  
-- `0x02`: Immediate operation  
-- `0x04`: Integer operation  
-- `0x08`: Floating point operation
+- `0x01`: Immediate operation  
+- `0x02`: Floating point operation 
 
 ### Instruction Set Documentation
 See [isa.md](docs/isa.md) for full documentation regarding the instruction set.

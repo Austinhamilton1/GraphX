@@ -73,56 +73,33 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 ### Arithmetic and Logic
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
-| `ADD` | 12 | Add two integer registers together and store in a third register | `Dest = Src1 + Src2` | None |
-| `ADDI` | 13 | Add an immediate value to an integer register and store it in another register | `Dest = Src1 + Imm` | `FLAG_I` |
-| `ADDF` | 14 | Add two floating point registers together and store in a third register | `Dest = Src1 + Src2` | `FLAG_F` |
-| `ADDFI` | 15 | Add an immediate value to a floating point register and storer it in another register | `Dest = Src1 + Imm` | `FLAG_I`, `FLAG_F` |
-| `SUB` | 16 | Subtract an integer register from another register and store in a third register | `Dest = Src1 - Src2` | None |
-| `SUBI` | 17 | Subtract an immediate value from an integer register and store it in another register | `Dest = Src1 - Imm` | `FLAG_I` |
-| `SUBF` | 18 | Subtract a floating point register from another register and store in a third register | `Dest = Src1 - Src2` | `FLAG_F` |
-| `SUBFI` | 19 | Subtract an immediate value from a floating point register and store in another register | `Dest = Src1 - Imm` | `FLAG_I`, `FLAG_F` |
-| `MULT` | 20 | Multiply two integer registers and store in a third register | `Dest = Src1 * Src2` | None |
-| `MULTI` | 21 | Multiply an integer register by an immediate value and store in another register | `Dest = Src1 * Imm` | `FLAG_I` |
-| `DIV` | 22 | Divide an integer register by another register and store in a third register | `Dest = Src1 / Src2` | None |
-| `DIVI` | 23 | Divde an integer register by an immediate value and store in another register | `Dest = Src1 / Imm` | `FLAG_I` |
-| `MULTF` | 24 | Multiply two floating point registers and store in a third register | `Dest = Src1 * Src2` | `FLAG_F` |
-| `MULTFI` | 25 | Multiply a floating point register by an immediate value and store in another register | `Dest = Src1 * Imm` | `FLAG_I`, `FLAG_F` |
-| `DIVF` | 26 | Divide a floating point register by another register and store in a third register | `Dest = Src1 / Src2` | `FLAG_F` |
-| `DIVFI` | 27 | Divide a floating point register by an immediate value and store in another register | `Dest = Src1 / Imm` | `FLAG_I`, `FLAG_F` |
-| `CMP` | 28 | Compare two integer registers and store result in `FLAGS` | `result = Dest - Src1; if(result == 0) then FLAGS = FLAG_ZERO; else if(result < 0) then FLAGS = FLAG_NEG; else FLAGS = FLAG_POS` | None |
-| `CMPF` | 29 | Compare two floating point registers and store result in `FLAGS` | `result = Dest - Src1; if(result == 0) then FLAGS = FLAG_ZERO; else if(result < 0) then FLAGS = FLAG_NEG; else FLAGS = FLAG_POS` | `FLAG_F` |
-| `MOV` | 30 | Move one integer register into another register | `Dest = Src1` | None |
-| `MOVI` | 31 | Move an immediate value into an integer register | `Dest = Imm` | `FLAG_I` |
-| `MOVF` | 32 | Move one floating point register into another register | `Dest = Src1` | `FLAG_F` |
-| `MOVFI` | 33 | Move an immediate value into a floating point register | `Dest = Imm` | `FLAG_I`, `FLAG_F` |
-| `MOVC` | 34 | Move an integer register into a floating point register and convert data types | `Dest = (float)Src1` | None |
-| `MOVCF` | 35 | Move a floating point register into an integer register and convert data types | `Dest = (int32_t)Src1` | `FLAG_F` |
+| `ADD` | 12 | Add two values together and store in a register | `Dest = Src1 + Src2/Imm` | `FLAG_I`, `FLAG_F` |
+| `SUB` | 13 | Subtract a value from a register and store in a register | `Dest = Src1 - Src2/Imm` | `FLAGS_I`, `FLAGS_F` |
+| `MULT` | 14 | Multiply two integer registers and store in a third register | `Dest = Src1 * Src2/Imm` | `FLAG_I`, `FLAG_F` |
+| `DIV` | 15 | Divide a register by a value and store in a register | `Dest = Src1 / Src2/Imm` | `FLAG_I`, `FLAG_F` |
+| `CMP` | 16 | Compare two registers and store result in `FLAGS` | `result = Dest - Src1; set(flags) | `FLAG_F` |
+| `MOV` | 17 | Move one register into another register | `Dest = Src1` | `FLAG_I`, `FLAG_F` |
+| `MOVC` | 18 | Move a register into another register and convert data types | `Dest = (float)Src1/Dest = (int32_t)Src1` | `FLAG_F` |
 
 ### Memory Access
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
-| `LD` | 36 | Load a value from memory into an integer register | `Dest = memory[Imm]` | `FLAG_I` |
-| `ST` | 37 | Store a value from an integer register into memory | `memory[Imm] = Dest` | `FLAG_I` |
-| `LDF` | 38 | Load a value from memory into a floating point register | `Dest = memory[Imm]` | `FLAG_I` |
-| `STF` | 39 | Store a value from a floating point register into memory | `memory[Imm] = Dest` | `FLAG_I` |
-| `LDR` | 40 | Load a value from memory specified by an integer register into an integer register | `Dest = memory[Src1]` | None |
-| `STR` | 41 | Store a value from an integer register into memory specified by an integer register | `memory[Src1] = Dest` | None |
-| `LDRF` | 42 | Load a value from memory specified by an integer register into a floating point register | `Dest = memory[Src1]` | `FLAG_F` |
-| `STRF` | 43 | Store a value from a floating point register into memory specified by an integer register | `memory[Src1] = Dest` | `FLAG_F` |
+| `LD` | 19 | Load a value from memory into a register | `Dest = memory[Src1/Imm]` | `FLAG_I`, `FLAG_F` |
+| `ST` | 20 | Store a value from an register into memory | `memory[Src1/Imm] = Dest` | `FLAG_I`, `FLAG_F` |
 
 ### Frontier Control
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
-| `PUSH` | 44 | Push an integer register to the next frontier | `push(next_frontier, Dest)` | None |
-| `POP` | 45 | Pop a node from the frontier into an integer register | `Dest = pop(frontier)` | None |
-| `FEMPTY` | 46 | Check if frontier is empty and set `FLAGS` | `if(empty(froniter)) then FLAGS = FLAG_ZERO; else FLAGS = ~FLAG_ZERO` | None |
-| `FSWAP` | 47 | Swap the frontier with the next frontier | `swap(frontier, next_frontier)` | None |
-| `FFILL` | 48 | Fill the frontier with all nodes in the graph | `for(node in graph_nodes) do push(froniter, node)` | None |
+| `PUSH` | 21 | Push an integer register to the next frontier | `push(next_frontier, Dest)` | None |
+| `POP` | 22 | Pop a node from the frontier into an integer register | `Dest = pop(frontier)` | None |
+| `FEMPTY` | 23 | Check if frontier is empty and set `FLAGS` | `if(empty(froniter)) then FLAGS = FLAG_ZERO; else FLAGS = ~FLAG_ZERO` | None |
+| `FSWAP` | 24 | Swap the frontier with the next frontier | `swap(frontier, next_frontier)` | None |
+| `FFILL` | 25 | Fill the frontier with all nodes in the graph | `for(node in graph_nodes) do push(froniter, node)` | None |
 
 ### Multicore/Synchronization Control
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
-| `PARALLEL` | 49 | Code implemented until the next `BARRIER` will run on all cores | Not Implemented | None |
-| `BARRIER` | 50 | Ensure all cores reach this point before continuing, then switch back to single core execution | Not Implemented | None |
-| `LOCK` | 51 | Mutual exclusion lock on a resource | Not Implemented | None |
-| `UNLOCK` | 52 | Unlock a resource | Not Implemented | None |
+| `PARALLEL` | 26 | Code implemented until the next `BARRIER` will run on all cores | Not Implemented | None |
+| `BARRIER` | 27 | Ensure all cores reach this point before continuing, then switch back to single core execution | Not Implemented | None |
+| `LOCK` | 28 | Mutual exclusion lock on a resource | Not Implemented | None |
+| `UNLOCK` | 29 | Unlock a resource | Not Implemented | None |
