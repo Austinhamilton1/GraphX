@@ -66,7 +66,7 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | `NITER` | 6 | Initiate one of the 4 node iterators | `niter[Imm] = 0` | `FLAG_I` |
 | `NNEXT` | 7 | Store the next neighbor (`v`, `weight`) of `Rnode` in (`Rnbr`, `Rval`) | `Rnbr = graph_nodes[Rnode + niter[Imm]]; Rval = graph_weights[Rnode + niter[Imm]]; niter[Imm]++` | `FLAG_I` |
 | `EITER` | 8 | Initiate the edge iterator | `eiter = 0; Rnode = 0` | None |
-| `ENEXT` | 9 | Store the next edge (`u`, `v`, `weight`) in (`Rnode`, `Rnbr`, `Rval`) | `Rnode` = graph_nodes[Rnode + eiter]; Rval = graph_weights[Rnode + eiter]` | None |
+| `ENEXT` | 9 | Store the next edge (`u`, `v`, `weight`) in (`Rnode`, `Rnbr`, `Rval`) | `Rnode = graph_nodes[Rnode + eiter]; Rval = graph_weights[Rnode + eiter]` | None |
 | `HASE` | 10 | Check if there exists an edge between `Rnode` and `Rnbr` | `if(has_edge(Rnode, Rnbr)) then FLAGS = ~FLAG_ZERO` | None |
 | `DEG` | 11 | Store the out degree of node `dest` in `Rval` | `Rval = degree(Dest)` | None |
 
