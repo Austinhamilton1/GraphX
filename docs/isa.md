@@ -67,7 +67,7 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | `NNEXT` | 7 | Store the next neighbor (`v`, `weight`) of `Rnode` in (`Rnbr`, `Rval`) | `Rnbr = graph_nodes[Rnode + niter[Imm]]; Rval = graph_weights[Rnode + niter[Imm]]; niter[Imm]++` | `FLAG_I` |
 | `EITER` | 8 | Initiate the edge iterator | `eiter = 0; Rnode = 0` | None |
 | `ENEXT` | 9 | Store the next edge (`u`, `v`, `weight`) in (`Rnode`, `Rnbr`, `Rval`) | `Rnode` = graph_nodes[Rnode + eiter]; Rval = graph_weights[Rnode + eiter]` | None |
-| `HASE` | 10 | Check if there exists an edge between `Rnode` and `Rnbr` | if(has_edge(Rnode, Rnbr)) then FLAGS = ~FLAG_ZERO | None |
+| `HASE` | 10 | Check if there exists an edge between `Rnode` and `Rnbr` | `if(has_edge(Rnode, Rnbr)) then FLAGS = ~FLAG_ZERO` | None |
 | `DEG` | 11 | Store the out degree of node `dest` in `Rval` | `Rval = degree(Dest)` | None |
 
 ### Arithmetic and Logic
@@ -77,9 +77,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | `SUB` | 13 | Subtract a value from a register and store in a register | `Dest = Src1 - Src2/Imm` | `FLAGS_I`, `FLAGS_F` |
 | `MULT` | 14 | Multiply two integer registers and store in a third register | `Dest = Src1 * Src2/Imm` | `FLAG_I`, `FLAG_F` |
 | `DIV` | 15 | Divide a register by a value and store in a register | `Dest = Src1 / Src2/Imm` | `FLAG_I`, `FLAG_F` |
-| `CMP` | 16 | Compare two registers and store result in `FLAGS` | `result = Dest - Src1; set(flags) | `FLAG_F` |
+| `CMP` | 16 | Compare two registers and store result in `FLAGS` | `result = Dest - Src1; set(flags, result)` | `FLAG_F` |
 | `MOV` | 17 | Move one register into another register | `Dest = Src1` | `FLAG_I`, `FLAG_F` |
-| `MOVC` | 18 | Move a register into another register and convert data types | `Dest = (float)Src1/Dest = (int32_t)Src1` | `FLAG_F` |
+| `MOVC` | 18 | Move a register into another register and convert data types | `Dest = (float)Src1`, or `Dest = (int32_t)Src1` | `FLAG_F` |
 
 ### Memory Access
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
