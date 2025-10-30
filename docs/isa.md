@@ -103,3 +103,17 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | `BARRIER` | 27 | Ensure all cores reach this point before continuing, then switch back to single core execution | Not Implemented | None |
 | `LOCK` | 28 | Mutual exclusion lock on a resource | Not Implemented | None |
 | `UNLOCK` | 29 | Unlock a resource | Not Implemented | None |
+
+## Instruction Semantics
+
+### `HALT`
+
+### `BZ`
+
+### `BNZ`
+
+### `BLT`
+
+### `BGE`
+
+### `JMP`
