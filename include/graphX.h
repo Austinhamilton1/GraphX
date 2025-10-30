@@ -44,25 +44,16 @@ typedef enum {
     
     /* Arithmetic and logic*/
     ADD,        // Add two registers
-    ADDF,       // Add two float registers
     SUB,        // Subtract two registers,
-    SUBF,       // Subtract two float registers
     MULT,       // Multiply two registers
     DIV,        // Divide two registers
-    MULTF,      // Multiply two float registers
-    DIVF,       // Divide two float registers
     CMP,        // Compare, set FLAGS
-    CMPF,       // Compare float, set FLAGS
     MOV,        // Move register
-    MOVF,       // Move float register
-    MOVC,       // Cast a register to a float register
-    MOVCF,      // Cast a float register to a register
+    MOVC,       // Move register, cast to destination type
 
     /* Memory access */
     LD,         // Load register from memory
     ST,         // Store register to memory
-    LDF,        // Load float register from memory
-    STF,        // Store float register to memory
 
     /* Frontier control */
     PUSH,       // Add neighbor to next frontier

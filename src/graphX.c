@@ -82,23 +82,14 @@ int decode(graphX_vm_t *vm, uint64_t data) {
     case HASE:
     case DEG:
     case ADD:
-    case ADDF:
     case SUB:
-    case SUBF:
     case MULT:
-    case MULTF:
     case DIV:
-    case DIVF:
     case CMP:
-    case CMPF:
     case MOV:
-    case MOVF:
     case MOVC:
-    case MOVCF:
     case LD:
     case ST:
-    case LDF:
-    case STF:
     case PUSH:
     case POP:
     case FEMPTY:
@@ -238,98 +229,107 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         vm->Rval = graph_degree(vm->graph, vm->R[arg1]);
         break;
     case ADD:
-        // Add two integer values and store the result in an integer register
-        if(flags & FLAG_I)
-            vm->R[arg1] = vm->R[arg2] + arg3;
-        else
-            vm->R[arg1] = vm->R[arg2] + vm->R[arg3];
-        break;
-    case ADDF:
-        // Add two float values and store the result in a float register
-        if(flags & FLAG_I)
-            vm->F[arg1] = vm->F[arg2] + farg;
-        else
-            vm->F[arg1] = vm->F[arg2] + vm->F[arg3];
+        // Add two values and store the result in a register
+        if(flags & FLAG_I) {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] + farg;
+            } else {
+                vm->R[arg1] = vm->R[arg2] + arg3;
+            }
+        } else {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] + vm->F[arg3];
+            } else {
+                vm->R[arg1] = vm->R[arg2] + vm->R[arg3];
+            }
+        }
         break;
     case SUB:
-        // Subtract a value from an integer register and store the result in an integer register
-        if(flags & FLAG_I)
-            vm->R[arg1] = vm->R[arg2] - arg3;
-        else
-            vm->R[arg1] = vm->R[arg2] - vm->R[arg3];
-        break;
-    case SUBF:
-        // Subtract a float value froma  float register and store the result in a float register
-        if(flags & FLAG_I)
-            vm->F[arg1] = vm->F[arg2] - farg;
-        else
-            vm->F[arg1] = vm->F[arg2] - vm->F[arg3];
+        // Subtract a value from a register and store the result in a register
+        if(flags & FLAG_I) {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] - farg;
+            } else {
+                vm->R[arg1] = vm->R[arg2] - arg3;
+            }
+        } else {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] - vm->F[arg3];
+            } else {
+                vm->R[arg1] = vm->R[arg2] - vm->R[arg3];
+            }
+        }
         break;
     case MULT:
-        // Multiply two integer values and store the result in an integer register
-        if(flags & FLAG_I)
-            vm->R[arg1] = vm->R[arg2] * arg3;
-        else
-            vm->R[arg1] = vm->R[arg2] * vm->R[arg3];
+        // Multiply two values and store the result in a register
+        if(flags & FLAG_I) {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] * farg;
+            } else {
+                vm->R[arg1] = vm->R[arg2] * arg3;
+            }
+        } else {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] * vm->F[arg3];
+            } else {
+                vm->R[arg1] = vm->R[arg2] * vm->R[arg3];
+            }
+        }
         break;
     case DIV:
-        // Divide an integer register by an integer value and store the result in an integer register
-        if(flags & FLAG_I)
-            vm->R[arg1] = vm->R[arg2] / arg3;
-        else
-            vm->R[arg1] = vm->R[arg2] / vm->R[arg3];
-        break;
-    case MULTF:
-        // Mutliply two float values and store the result in a float register
-        if(flags & FLAG_I)
-            vm->F[arg1] = vm->F[arg2] * farg;
-        else
-            vm->F[arg1] = vm->F[arg2] * vm->F[arg3];
-        break;
-    case DIVF:
-        // Divide a float register by a float value and store the result in a float register
-        if(flags & FLAG_I)
-            vm->F[arg1] = vm->F[arg2] / farg;
-        else
-            vm->F[arg1] = vm->F[arg2] / vm->F[arg3];
+        // Divide a register by a value and store the result in a register
+        if(flags & FLAG_I) {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] / farg;
+            } else {
+                vm->R[arg1] = vm->R[arg2] / arg3;
+            }
+        } else {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2] / vm->F[arg3];
+            } else {
+                vm->R[arg1] = vm->R[arg2] / vm->R[arg3];
+            }
+        }
         break;
     case CMP:
         // Compare two registers and store the results in FLAGS
         vm->FLAGS = 0;
-        comp = vm->R[arg1] - vm->R[arg2];
-        if(comp == 0) vm->FLAGS |= FLAG_ZERO;
-        else if(comp < 0) vm->FLAGS |= FLAG_NEG;
-        else vm->FLAGS |= FLAG_POS;
-        break;
-    case CMPF:
-        // Compare two float registers and store the results in FLAGS
-        vm->FLAGS = 0;
-        compf = vm->F[arg1] - vm->F[arg2];
-        if(compf == 0.0f) vm->FLAGS |= FLAG_ZERO;
-        else if(compf < 0.0f) vm->FLAGS |= FLAG_NEG;
-        else vm->FLAGS |= FLAG_POS;
+        if(flags == FLAG_F) {
+            compf = vm->F[arg1] - vm->F[arg2];
+            if(compf == 0.0f) vm->FLAGS |= FLAG_ZERO;
+            else if(compf < 0.0f) vm->FLAGS |= FLAG_NEG;
+            else vm->FLAGS |= FLAG_POS;
+        } else {
+            comp = vm->R[arg1] - vm->R[arg2];
+            if(comp == 0) vm->FLAGS |= FLAG_ZERO;
+            else if(comp < 0) vm->FLAGS |= FLAG_NEG;
+            else vm->FLAGS |= FLAG_POS;
+        }
         break;
     case MOV:
         // Move one value to an integer register
-        if(flags & FLAG_I)
-            vm->R[arg1] = arg3;
-        else
-            vm->R[arg1] = vm->R[arg2];
-        break;
-    case MOVF:
-        // Move one value to a float register
-        if(flags & FLAG_I)
-            vm->F[arg1] = farg;
-        else
-            vm->F[arg1] = vm->F[arg2];
+        if(flags & FLAG_I) {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = farg;
+            } else {
+                vm->R[arg1] = arg3;
+            }
+        } else {
+            if(flags & FLAG_F) {
+                vm->F[arg1] = vm->F[arg2];
+            } else {
+                vm->R[arg1] = vm->R[arg2];
+            }
+        }
         break;
     case MOVC:
-        // Cast an integer register to a float register
-        vm->F[arg1] = (float)vm->R[arg2];
-        break;
-    case MOVCF:
-        // Cast a float register to an integer register
-        vm->R[arg1] = (int32_t)vm->F[arg2];
+        // Move a register to another, casting types
+        if(flags == FLAG_F) {
+            vm->F[arg1] = (float)vm->R[arg2];
+        } else {
+            vm->R[arg1] = (int32_t)vm->F[arg2];
+        }
         break;
     case LD:
         // Load a value from memory into a register
@@ -337,11 +337,21 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         if(flags & FLAG_I) {
             // Bounds check
             if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
-            vm->R[arg1] = vm->memory[arg3];
+
+            if(flags & FLAG_F) {
+                memcpy(&vm->F[arg1], &vm->memory[arg3], sizeof(vm->memory[arg3]));
+            } else {
+                vm->R[arg1] = vm->memory[arg3];
+            }
         } else {
             // Bounds check
             if(vm->R[arg2] > MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
-            vm->R[arg1] = vm->memory[vm->R[arg2]];
+            
+            if(flags & FLAG_F) {
+                memcpy(&vm->F[arg1], &vm->memory[vm->R[arg2]], sizeof(vm->memory[vm->R[arg2]]));
+            } else {
+                vm->R[arg1] = vm->memory[vm->R[arg2]];
+            }
         }
         break;
     case ST:
@@ -349,35 +359,20 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         if(flags & FLAG_I) {
             // Bounds check
             if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
-            vm->memory[arg3] = vm->R[arg1];
+
+            if(flags & FLAG_F) {
+                memcpy(&vm->memory[arg3], &vm->F[arg1], sizeof(vm->memory[arg3]));
+            } else {
+                vm->memory[arg3] = vm->R[arg1];
+            }
         } else {
             // Bounds check
             if(vm->R[arg2] > MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
-            vm->memory[vm->R[arg2]] = vm->R[arg1];
-        }
-        break;
-    case LDF:
-        // Load a value from memory into a float register
-        if(flags & FLAG_I) {
-            // Bounds check
-            if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
-            memcpy(&vm->F[arg1], &vm->memory[arg3], sizeof(vm->memory[arg3]));
-        } else {
-            // Bounds check
-            if(vm->R[arg2] > MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
-            memcpy(&vm->F[arg1], &vm->memory[vm->R[arg2]], sizeof(vm->memory[vm->R[arg2]]));
-        }
-        break;
-    case STF:
-        // Store a value from a register into memory
-        if(flags & FLAG_I) {
-            // Bounds check
-            if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
-            memcpy(&vm->memory[arg3], &vm->F[arg1], sizeof(vm->memory[arg3]));
-        } else {
-            // Bounds check
-            if(vm->R[arg2] > MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
-            memcpy(&vm->memory[vm->R[arg2]], &vm->F[arg1], sizeof(vm->memory[vm->R[arg2]]));
+            if(flags & FLAG_F) {
+                memcpy(&vm->memory[vm->R[arg2]], &vm->F[arg1], sizeof(vm->memory[vm->R[arg2]]));
+            } else {
+                vm->memory[vm->R[arg2]] = vm->R[arg1];
+            }
         }
         break;
     case PUSH:

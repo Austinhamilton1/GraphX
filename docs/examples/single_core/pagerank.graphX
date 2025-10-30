@@ -6,11 +6,11 @@
 .code
 init:
     FFILL                           ; Start with a full frontier
-    MOVF Facc, #11                  ; Facc = 11.0f
+    MOV Facc, #11                   ; Facc = 11.0f
     MOV Racc, #10                   ; Racc = 10
     MOV Rtmp1, #11                  ; Rtmp1 = 11
-    MOVF Ftmp1, #1                  ; Ftmp1 = 1.0f
-    DIVF Ftmp1, Ftmp1, Facc         ; Ftmp1 = 1.0f / N
+    MOV Ftmp1, #1                   ; Ftmp1 = 1.0f
+    DIV Ftmp1, Ftmp1, Facc          ; Ftmp1 = 1.0f / N
 
 init_loop:
     FEMPTY                          ; Check for empty frontier 
@@ -18,7 +18,7 @@ init_loop:
 
     POP Rnode                       ; Rnode = u
 
-    STF Ftmp1, Rnode                ; memory[u] = 1 / N
+    ST Ftmp1, Rnode                 ; memory[u] = 1 / N
     JMP init_loop
 
 reset_mem:
@@ -29,9 +29,9 @@ reset_loop:
     BZ iter
 
     ADD Rtmp3, Rtmp2, Rtmp1         ; Rtmp3 = u + N
-    LDF Ftmp1, Rtmp3                ; Ftmp1 = PR(u)
-    STF Ftmp1, Rtmp2                ; memory[u] = PR(u)
-    STF Fzero, Rtmp3                ; memory[Rtmp3] = 0.0f
+    LD Ftmp1, Rtmp3                 ; Ftmp1 = PR(u)
+    ST Ftmp1, Rtmp2                 ; memory[u] = PR(u)
+    ST Fzero, Rtmp3                 ; memory[Rtmp3] = 0.0f
     
     ADD Rtmp2, Rtmp2, #1
     JMP reset_loop
@@ -44,16 +44,16 @@ iter:
 
     FFILL                           ; Refill the frontier with all nodes
 
-    MOVF Ftmp1, #1                  ; Ftmp1 = 1.0f
-    SUBF Ftmp1, Ftmp1, #0.85        ; Ftmp1 = 1.0f - 0.85
-    DIVF Ftmp1, Ftmp1, Facc         ; Ftmp1 = (1.0f - 0.85) / N
+    MOV Ftmp1, #1                   ; Ftmp1 = 1.0f
+    SUB Ftmp1, Ftmp1, #0.85         ; Ftmp1 = 1.0f - 0.85
+    DIV Ftmp1, Ftmp1, Facc          ; Ftmp1 = (1.0f - 0.85) / N
 
     JMP outer_loop
 
 swap_back:
     MOV Rtmp2, Rnbr                 ; Rtmp2 = u
     ADD Rtmp2, Rtmp2, Rtmp1         ; Rtmp2 = u + N
-    STF Ftmp2, Rtmp2                ; new_ranks[u] = (1-d)*N + d*sum(PR(v) / L(v))
+    ST Ftmp2, Rtmp2                 ; new_ranks[u] = (1-d)*N + d*sum(PR(v) / L(v))
 
     FSWAP                           ; Swap the frontiers back
 
@@ -62,7 +62,7 @@ outer_loop:
     BZ reset_mem
 
     POP Rnbr                        ; Rnbr = u
-    MOVF Ftmp2, Ftmp1               ; Ftmp2 = (1.0f - 0.85) / N
+    MOV Ftmp2, Ftmp1                ; Ftmp2 = (1.0f - 0.85) / N
 
     FSWAP                           ; Need a second iteration of nodes
     FFILL                           ; Fill the new frontier
@@ -82,10 +82,10 @@ inner_loop:
     BZ inner_loop
 
     MOVC Ftmp3, Rval                ; Ftmp3 = L(v)
-    LDF Ftmp4, Rnode                ; Ftmp4 = PR(v)
-    DIVF Ftmp3, Ftmp4, Ftmp3        ; Ftmp3 = PR(v) / L(v)
-    MULTF Ftmp3, Ftmp3, #0.85       ; Ftmp3 = 0.85 * (PR(v) / L(v))
-    ADDF Ftmp2, Ftmp2, Ftmp3        ; Ftmp2 += Ftmp3
+    LD Ftmp4, Rnode                 ; Ftmp4 = PR(v)
+    DIV Ftmp3, Ftmp4, Ftmp3         ; Ftmp3 = PR(v) / L(v)
+    MULT Ftmp3, Ftmp3, #0.85        ; Ftmp3 = 0.85 * (PR(v) / L(v))
+    ADD Ftmp2, Ftmp2, Ftmp3         ; Ftmp2 += Ftmp3
 
     JMP inner_loop
 

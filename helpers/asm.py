@@ -37,32 +37,23 @@ OPCODES = {
     'HASE': 10,     # Check if there is an edge between Rnode and input node
     'DEG': 11,      # Store the degree of a node in a register
     'ADD': 12,      # Add registers
-    'ADDF': 13,     # Add float registers
-    'SUB': 14,      # Subtract registers
-    'SUBF': 15,     # Subtract float registers
-    'MULT': 16,     # Multiply registers
-    'DIV': 17,      # Divide two registers
-    'MULTF': 18,    # Multiply two float registers
-    'DIVF': 19,     # Divide float registers
-    'CMP': 20,      # Compare, set FLAGS
-    'CMPF': 21,     # Compare floats, set FLAGS
-    'MOV': 22,      # Move
-    'MOVF': 23,     # Move float
-    'MOVC': 24,     # Cast a register to a float register
-    'MOVCF': 25,    # Cast a float register to a register
-    'LD': 26,       # Load register from memory
-    'ST': 27,       # Store register to memory
-    'LDF': 28,      # Load float register from memory
-    'STF': 29,      # Store float register to memory
-    'PUSH': 30,     # Add neighbor to next frontier
-    'POP': 31,      # Load next node from frontier
-    'FEMPTY': 32,   # Check if frontier is empty
-    'FSWAP': 33,    # Swap next frontier and current frontier buffers
-    'FFILL': 34,    # Fill the frontier with all nodes in graph
-    'PARALLEL': 35, # Run next block of code with multicore mode
-    'BARRIER': 36,  # Wait until all cores reach this code before continuing
-    'LOCK': 37,     # Mutual exclusion lock on a resource
-    'UNLOCK': 38,   # Unlock mutual exclusion lock
+    'SUB': 13,      # Subtract registers
+    'MULT': 14,     # Multiply registers
+    'DIV': 15,      # Divide two registers
+    'CMP': 16,      # Compare, set FLAGS
+    'MOV': 17,      # Move
+    'MOVC': 18,     # Cast a register to a float register
+    'LD': 19,       # Load register from memory
+    'ST': 20,       # Store register to memory
+    'PUSH': 21,     # Add neighbor to next frontier
+    'POP': 22,      # Load next node from frontier
+    'FEMPTY': 23,   # Check if frontier is empty
+    'FSWAP': 24,    # Swap next frontier and current frontier buffers
+    'FFILL': 25,    # Fill the frontier with all nodes in graph
+    'PARALLEL': 26, # Run next block of code with multicore mode
+    'BARRIER': 27,  # Wait until all cores reach this code before continuing
+    'LOCK': 28,     # Mutual exclusion lock on a resource
+    'UNLOCK': 29,   # Unlock mutual exclusion lock
 }
 
 def encode_instruction(op, args):
@@ -82,33 +73,38 @@ def encode_instruction(op, args):
         imm = int(args[0]) & IMMEDIATE_ARG_MASK
         return opcode | (FLAG_I << 48) | imm
     
-    # R-R-R/I integer operations
+    # R-R-R/I operations
     elif op in ['ADD', 'SUB', 'MULT', 'DIV']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
         r1 = int(args[1]) & REGISTER_ARG_MASK
         
         # Check for immediate instruction
         if args[2].startswith('#'):
-            r2 = int(args[2][1:]) & IMMEDIATE_ARG_MASK
-            flags = FLAG_I
-        else:
-            r2 = (int(args[2]) & REGISTER_ARG_MASK) << 24
-            flags = 0x0
+            # Check for float instruction
+            if r0 >= 22:
+                # Set the correct register indexes
+                r0 -= 22
+                r1 -= 22
 
-        return opcode | (flags << 48) | (r0 << 40) | (r1 << 32) | r2
-    
-    # R-R-R/I float operations
-    elif op in ['ADDF', 'SUBF', 'MULTF', 'DIVF']:
-        r0 = int(args[0]) & REGISTER_ARG_MASK
-        r1 = int(args[1]) & REGISTER_ARG_MASK
-
-        # Check for immediate instruction
-        if args[2].startswith('#'):
-            r2 = struct.unpack('<I', struct.pack('<f', float(args[2][1:])))[0] & IMMEDIATE_ARG_MASK
-            flags = FLAG_I | FLAG_F
+                # Set immediate value and flags
+                r2 = struct.unpack('<I', struct.pack('<f', float(args[2][1:])))[0] & IMMEDIATE_ARG_MASK
+                flags = FLAG_I | FLAG_F
+            else:
+                r2 = int(args[2][1:]) & IMMEDIATE_ARG_MASK
+                flags = FLAG_I
         else:
-            r2 = (int(args[2]) & REGISTER_ARG_MASK) << 24
-            flags = FLAG_F
+            # Check for float instruction
+            if r0 >= 22:
+                # Set the correct register indexes
+                r0 -= 22
+                r1 -= 22
+
+                # Set correct register index and flags
+                r2 = ((int(args[2]) - 22) & REGISTER_ARG_MASK) << 24
+                flags = FLAG_F
+            else:
+                r2 = (int(args[2]) & REGISTER_ARG_MASK) << 24
+                flags = 0x0
 
         return opcode | (flags << 48) | (r0 << 40) | (r1 << 32) | r2
     
@@ -118,25 +114,31 @@ def encode_instruction(op, args):
 
         # Check for immediate instruction
         if args[1].startswith('#'):
-            r1 = int(args[1][1:]) & IMMEDIATE_ARG_MASK
-            flags = FLAG_I
+            # Check for float instruction
+            if r0 >= 22:
+                # Set the correct register indexes
+                r0 -= 22
+
+                # Set immediate value and flags
+                r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
+                flags = FLAG_I | FLAG_F
+            else:
+                r1 = int(args[1][1:]) & IMMEDIATE_ARG_MASK
+                flags = FLAG_I
         else:
-            r1 = (int(args[1]) & REGISTER_ARG_MASK) << 32
-            flags = 0x0
+            # Check for float instruction
+            if r0 >= 22:
+                # Set the correct register indexes
+                r0 -= 22
+                r1 = int(args[1])
+                if r1 >= 22:
+                    r1 -= 22
 
-        return opcode | (flags << 48) | (r0 << 40) | r1
-
-    # R-R/I float operations
-    elif op in ['MOVF', 'CMPF', 'MOVCF', 'LDF', 'STF']:
-        r0 = int(args[0]) & REGISTER_ARG_MASK
-
-        # Check for immediate instruction
-        if args[1].startswith('#'):
-            r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
-            flags = FLAG_I | FLAG_F
-        else:
-            r1 = (int(args[1]) & REGISTER_ARG_MASK) << 32
-            flags = FLAG_F
+                r1 = (r1 & REGISTER_ARG_MASK) << 32
+                flags = FLAG_F
+            else:
+                r1 = (int(args[1]) & REGISTER_ARG_MASK) << 32
+                flags = 0x0
 
         return opcode | (flags << 48) | (r0 << 40) | r1
 
@@ -181,24 +183,24 @@ def parse_assembly(lines):
         'Rtmp16': 19,
         'Rzero': 20,
         'Rcore': 21,
-        'Facc': 0,
-        'Ftmp1': 1,
-        'Ftmp2': 2,
-        'Ftmp3': 3,
-        'Ftmp4': 4,
-        'Ftmp5': 5,
-        'Ftmp6': 6,
-        'Ftmp7': 7,
-        'Ftmp8': 8,
-        'Ftmp9': 9,
-        'Ftmp10': 10,
-        'Ftmp11': 11,
-        'Ftmp12': 12,
-        'Ftmp13': 13,
-        'Ftmp14': 14,
-        'Ftmp15': 15,
-        'Ftmp16': 16,
-        'Fzero': 17,
+        'Facc': 22,
+        'Ftmp1': 23,
+        'Ftmp2': 24,
+        'Ftmp3': 25,
+        'Ftmp4': 26,
+        'Ftmp5': 27,
+        'Ftmp6': 28,
+        'Ftmp7': 29,
+        'Ftmp8': 30,
+        'Ftmp9': 31,
+        'Ftmp10': 32,
+        'Ftmp11': 33,
+        'Ftmp12': 34,
+        'Ftmp13': 35,
+        'Ftmp14': 36,
+        'Ftmp15': 37,
+        'Ftmp16': 38,
+        'Fzero': 39,
     }
     pc = 0
 
