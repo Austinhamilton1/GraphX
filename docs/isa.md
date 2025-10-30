@@ -110,135 +110,228 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Opcode:** 0x0
  - **Operands:** None (flags ignored)
  - **Effect:**
-    - Suspends the execution of the VM.
+    - Suspends the execution of the VM
  - **Usage:**
- ```
- CMP Rzero, Rzero
- BZ done
+```
+...
+CMP Rtmp1, Rzero
+BZ done
+...
 
- done:
-    HALT    ; Program is finished
- ```
+done:
+    HALT                    ; Program is finished
+```
 
 ### `BZ`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x1
+ - **Operands:** Immediate PC location (flags ignored)
  - **Effect:**
-    -
+    - Check current `FLAGS` register
+    - If `FLAGS` has `FLAG_ZERO` bit set:
+        - Jump to `Imm`
+    - Otherwise
+        - Continue execution
  - **Usage:**
- ```
+```
+...
+loop:
+    CMP Rtmp1, Rzero
+    BZ done                 ; If Rtmp1 == Rzero, break out of the current loop
 
- ```
+    SUB Rtmp1, Rtmp1, #1
+    JMP loop
+...
+
+done:
+    HALT
+```
 
 ### `BNZ`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x2
+ - **Operands:** Immediate PC location (flags ignored)
  - **Effect:**
-    -
+    - Check current `FLAGS` register
+    - If `FLAGS` does not have `FLAGS_ZERO` bit set:
+        - Jump to `Imm`
+    - Otherwise:
+        - Continue execution
  - **Usage:**
- ```
+```
+ ...
+loop:
+    FPOP Rnode
 
- ```
+    FEMPTY
+    BNZ loop                ; If the frontier is not empty, loop again
+...
+```
 
 ### `BLT`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x3
+ - **Operands:** Immediate PC location (flags ignored)
  - **Effect:**
-    -
+    - Check current `FLAGS` register
+    - If `FLAGS` has `FLAGS_NEG` bit set:
+        - Jump to `Imm`
+    - Otherwise:
+        - Continue execution
  - **Usage:**
- ```
-
- ```
+```
+...
+loop:
+    ADD Rtmp1, #1
+    CMP Rtmp1, Rtmp2
+    BLT loop                ; If Rtmp1 is still less than Rtmp2, loop again
+...
+```
 
 ### `BGE`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x4
+ - **Operands:** Immediate PC location (flags ignored)
  - **Effect:**
-    -
+    - Check current `FLAGS` register
+    - If `FLAGS` has `FLAG_POS` or `FLAG_ZERO` bits set:
+        - Jump to `Imm`
+    - Otherwise:
+        - Continue execution
  - **Usage:**
- ```
-
- ```
+```
+...
+loop:
+    SUB Rtmp1, #1
+    CMP Rtmp1, Rzero
+    BGE loop                ; If Rtmp1 is still greater than or equal to 0, loop again
+...
+```
 
 ### `JMP`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x5
+ - **Operands:** Immediate PC location (flags ignored)
  - **Effect:**
-    -
+    - Jump to `Imm`
  - **Usage:**
- ```
-
- ```
+```
+...
+JMP next_iter               ; Jump to the next_iter label
+...
+next_iter:
+    LD Rtmp1, Rtmp2
+...
+```
 
 ### `NITER`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x6
+ - **Operands:** Immediate value 0-3. Determines which iterator to initialize (flags ignored)
  - **Effect:**
-    -
+    - Initialize the specified `niter` register to 0
+    - Subsequent calls to `NNEXT` receive the next neighbor of `Rnode`
  - **Usage:**
- ```
-
- ```
+```
+...
+NITER #0                   ; Initialize niter[0] = 0
+NNEXT #0
+...
+```
 
 ### `NNEXT`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x7
+ - **Operands:** Immedate value 0-3. Determines which iterator to use (flags ignored) 
  - **Effect:**
-    -
+    - If there are no other neighbors:
+        - Set `FLAGS` = `FLAG_ZERO`
+    - Otherwise
+        - Get the node at `graph->col_index[graph->row_index[Rnode] + niter[Imm]]` (next neighbor of `Rnode`)
+            - Store this in `Rnbr`
+        - Get the value at `graph->values[graph->row_index[Rnode] + niter[Imm]]` (weight between `Rnode` and new `Rnbr`)
+            - Store this in `Rval`
+        - Increment `niter[Imm]`
  - **Usage:**
- ```
-
- ```
+```
+...
+NITER #0
+NNEXT #0                    ; Rnbr now holds next neighbor, Rval now holds weight
+... 
+```
 
 ### `EITER`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x8
+ - **Operands:** None (flags ignored)
  - **Effect:**
-    -
+    - Initialize `eiter` register to 0 and Rnode register to 0
+    - Subsequent calls to `ENEXT` will put the next edge (`u`, `v`, `weight`) into (`Rnode`, `Rnbr`, `Rval`)
  - **Usage:**
- ```
-
- ```
+```
+...
+EITER                       ; Initializes eiter = 0, Rnode = 0
+ENEXT
+...
+```
 
 ### `ENEXT`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0x9
+ - **Operands:** None (flags ignored)
  - **Effect:**
-    -
+    - If there are no more edges:
+        - Set `FLAGS` = `FLAG_ZERO`
+    - Otherwise
+        - If `Rnode` has no more neighbors:
+            - Increment `Rnode`
+        - Otherwise
+            - Get the node at `graph->col_index[graph->row_index[Rnode] + eiter]`
+                - Store this in `Rnbr`
+            - Get the value at `graph->values[graph->row_index[Rnode] + eiter]`
+                - Store this in `Rval`
+            Increment `eiter`
  - **Usage:**
- ```
-
- ```
+```
+...
+EITER
+ENEXT                       ; Rnode now holds u, Rnbr now holds v, Rval now holds weight                   
+...
+```
 
 ### `HASE`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0xA
+ - **Operands:** None (flags ignored)
  - **Effect:**
-    -
+    - Determine if an edge exists between `Rnode` and `Rnbr`
+    - If it does
+        - Set `FLAGS` = `~FLAGS_ZERO`
+    - Otherwise
+        - Set `FLAGS` = `FLAGS_ZERO`
  - **Usage:**
- ```
-
- ```
+```
+...
+FPOP Rnode
+MOV Rnbr, #3
+HASE                        ; Sets flags based on whether an edge exists between Rnode and Rnbr
+BZ done
+...
+```
 
 ### `DEG`
- - **Opcode:** 0x
- - **Operands:** 
+ - **Opcode:** 0xB
+ - **Operands:** Node register (flags ignored)
  - **Effect:**
-    -
+    - Number of outbound connections counted for `Src1`
+    - Connection count stored in `Rval`
  - **Usage:**
- ```
-
- ```
+```
+...
+DEG Rtmp1                   ; Rval now contains the out degree of Rtmp1
+MOV Rtmp2, Rval
+...
+```
 
 ### `ADD`
- - **Opcode:** 0x
+ - **Opcode:** 0xC
  - **Operands:** 
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `SUB`
  - **Opcode:** 0x
@@ -246,9 +339,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `MULT`
  - **Opcode:** 0x
@@ -256,9 +349,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `DIV`
  - **Opcode:** 0x
@@ -266,9 +359,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `CMP`
  - **Opcode:** 0x
@@ -276,9 +369,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `MOV`
  - **Opcode:** 0x
@@ -286,9 +379,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `MOVC`
  - **Opcode:** 0x
@@ -296,9 +389,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `LD`
  - **Opcode:** 0x
@@ -306,9 +399,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `ST`
  - **Opcode:** 0x
@@ -316,9 +409,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `FPUSH`
  - **Opcode:** 0x
@@ -326,9 +419,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `FPOP`
  - **Opcode:** 0x
@@ -336,9 +429,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `FEMPTY`
  - **Opcode:** 0x
@@ -346,9 +439,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `FSWAP`
  - **Opcode:** 0x
@@ -356,9 +449,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `FFILL`
  - **Opcode:** 0x
@@ -366,9 +459,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `PARALLEL`
  - **Opcode:** 0x
@@ -376,9 +469,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `BARRIER`
  - **Opcode:** 0x
@@ -386,9 +479,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `LOCK`
  - **Opcode:** 0x
@@ -396,9 +489,9 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```
 
 ### `UNLOCK`
  - **Opcode:** 0x
@@ -406,6 +499,6 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
  - **Effect:**
     -
  - **Usage:**
- ```
+```
 
- ```
+```

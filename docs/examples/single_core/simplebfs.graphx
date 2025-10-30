@@ -17,10 +17,10 @@ loop:
     FPOP Rnode       ; Get next node
     ST Rnode, Rtmp1
     SUB Rtmp1, Rtmp1, #1
-    NITER 0
+    NITER #0
 
 neighbor_loop:
-    NNEXT 0         ; Get neighbor
+    NNEXT #0         ; Get neighbor
     BZ loop
 
     ; Check if visited

@@ -12,12 +12,12 @@ loop:                       ; Main loop
 
     ; Start iteration on current node ;
     MOV Rnode, Rtmp1
-    NITER 0
+    NITER #0
 
     SUB Rtmp1, Rtmp1, #1      ; Increment pointer
 
 a_loop:
-    NNEXT 0                 ; Get the next neighbor
+    NNEXT #0                 ; Get the next neighbor
     BZ loop
     
     MOV Rtmp2, Rnbr         ; store state

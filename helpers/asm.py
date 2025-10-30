@@ -70,7 +70,7 @@ def encode_instruction(op, args):
     
     # I operations
     elif op in ['BZ', 'BNZ', 'BLT', 'BGE', 'JMP', 'NITER', 'NNEXT', 'LOCK', 'UNLOCK']:
-        imm = int(args[0]) & IMMEDIATE_ARG_MASK
+        imm = int(args[0][1:]) & IMMEDIATE_ARG_MASK
         return opcode | (FLAG_I << 48) | imm
     
     # R-R-R/I operations
@@ -259,7 +259,7 @@ def parse_assembly(lines):
                 if args[i] in register_names:
                     args[i] = str(register_names[args[i]])
                 elif args[i] in code_labels:
-                    args[i] = str(code_labels[args[i]])
+                    args[i] = '#' + str(code_labels[args[i]])
 
             code.append(encode_instruction(op, args))
 
