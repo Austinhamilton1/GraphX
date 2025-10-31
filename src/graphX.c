@@ -83,7 +83,7 @@ int decode(graphX_vm_t *vm, uint64_t data) {
     case DEG:
     case ADD:
     case SUB:
-    case MULT:
+    case MUL:
     case DIV:
     case CMP:
     case MOV:
@@ -95,6 +95,14 @@ int decode(graphX_vm_t *vm, uint64_t data) {
     case FEMPTY:
     case FSWAP:
     case FFILL:
+    case VADD:
+    case VSUB:
+    case VMUL:
+    case VDIV:
+    case VLD:
+    case VST:
+    case VSET:
+    case VSUM:
     case PARALLEL:
     case BARRIER:
     case LOCK:
@@ -260,7 +268,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             }
         }
         break;
-    case MULT:
+    case MUL:
         // Multiply two values and store the result in a register
         if(flags & FLAG_I) {
             if(flags & FLAG_F) {
@@ -465,49 +473,10 @@ void graphX_reset(graphX_vm_t *vm) {
     vm->A1 = 0;
     vm->A2 = 0;
 
-    vm->Rnode = 0;
-    vm->Rval = 0;
-    vm->Rnbr = 0;
-
-    vm->Racc = 0;
-    vm->Rtmp1 = 0;
-    vm->Rtmp2 = 0;
-    vm->Rtmp3 = 0;
-    vm->Rtmp4 = 0;
-    vm->Rtmp5 = 0;
-    vm->Rtmp6 = 0;
-    vm->Rtmp7 = 0;
-    vm->Rtmp8 = 0;
-    vm->Rtmp9 = 0;
-    vm->Rtmp10 = 0;
-    vm->Rtmp11 = 0;
-    vm->Rtmp12 = 0;
-    vm->Rtmp13 = 0;
-    vm->Rtmp14 = 0;
-    vm->Rtmp15 = 0;
-    vm->Rtmp16 = 0;
-
-    vm->Rzero = 0;
-
-    vm->Facc = 0.0f;
-    vm->Ftmp1 = 0.0f;
-    vm->Ftmp2 = 0.0f;
-    vm->Ftmp3 = 0.0f;
-    vm->Ftmp4 = 0.0f;
-    vm->Ftmp5 = 0.0f;
-    vm->Ftmp6 = 0.0f;
-    vm->Ftmp7 = 0.0f;
-    vm->Ftmp8 = 0.0f;
-    vm->Ftmp9 = 0.0f;
-    vm->Ftmp10 = 0.0f;
-    vm->Ftmp11 = 0.0f;
-    vm->Ftmp12 = 0.0f;
-    vm->Ftmp13 = 0.0f;
-    vm->Ftmp14 = 0.0f;
-    vm->Ftmp15 = 0.0f;
-    vm->Ftmp16 = 0.0f;
-
-    vm->Fzero = 0.0f;
+    memset(vm->R, 0, sizeof(vm->R));
+    memset(vm->F, 0, sizeof(vm->F));
+    memset(vm->VR, 0, sizeof(vm->VR));
+    memset(vm->VF, 0, sizeof(vm->VF));
 
     for(int i = 0; i < 4; i++)
         vm->niter[i] = 0;

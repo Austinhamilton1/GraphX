@@ -38,7 +38,7 @@ OPCODES = {
     'DEG': 11,      # Store the degree of a node in a register
     'ADD': 12,      # Add registers
     'SUB': 13,      # Subtract registers
-    'MULT': 14,     # Multiply registers
+    'MUL': 14,      # Multiply registers
     'DIV': 15,      # Divide two registers
     'CMP': 16,      # Compare, set FLAGS
     'MOV': 17,      # Move
@@ -50,10 +50,18 @@ OPCODES = {
     'FEMPTY': 23,   # Check if frontier is empty
     'FSWAP': 24,    # Swap next frontier and current frontier buffers
     'FFILL': 25,    # Fill the frontier with all nodes in graph
-    'PARALLEL': 26, # Run next block of code with multicore mode
-    'BARRIER': 27,  # Wait until all cores reach this code before continuing
-    'LOCK': 28,     # Mutual exclusion lock on a resource
-    'UNLOCK': 29,   # Unlock mutual exclusion lock
+    'VADD': 26,     # Vector addition
+    'VSUB': 27,     # Vector subtraction
+    'VMUL': 28,     # Vector multiplication
+    'VDIV': 29,     # Vector division
+    'VLD': 30,      # Vector load
+    'VST': 31,      # Vector store
+    'VSET': 32,     # Vector broadcast
+    'VSUM': 33,     # Vector sum
+    'PARALLEL': 34, # Run next block of code with multicore mode
+    'BARRIER': 35,  # Wait until all cores reach this code before continuing
+    'LOCK': 36,     # Mutual exclusion lock on a resource
+    'UNLOCK': 37,   # Unlock mutual exclusion lock
 }
 
 def encode_instruction(op, args):

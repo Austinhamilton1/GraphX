@@ -75,7 +75,7 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | ------------ | ---------- | --------------- | ------------- | --------- |
 | `ADD` | 12 | Add two values together and store in a register | `Dest = Src1 + Src2/Imm` | `FLAG_I`, `FLAG_F` |
 | `SUB` | 13 | Subtract a value from a register and store in a register | `Dest = Src1 - Src2/Imm` | `FLAGS_I`, `FLAGS_F` |
-| `MULT` | 14 | Multiply two integer registers and store in a third register | `Dest = Src1 * Src2/Imm` | `FLAG_I`, `FLAG_F` |
+| `MUL` | 14 | Multiply two integer registers and store in a third register | `Dest = Src1 * Src2/Imm` | `FLAG_I`, `FLAG_F` |
 | `DIV` | 15 | Divide a register by a value and store in a register | `Dest = Src1 / Src2/Imm` | `FLAG_I`, `FLAG_F` |
 | `CMP` | 16 | Compare two registers and store result in `FLAGS` | `result = Dest - Src1; set(flags, result)` | `FLAG_F` |
 | `MOV` | 17 | Move one register into another register | `Dest = Src1` | `FLAG_I`, `FLAG_F` |
@@ -359,7 +359,7 @@ SUB Ftmp1, Ftmp10, #12.9    ; Ftmp1 = Ftmp10 - 12.9
 ...
 ```
 
-### `MULT`
+### `MUL`
  - **Opcode:** 0xE
  - **Operands:** Destination register, first source register, second source register or immediate value (`FLAG_I` determines register/immediate, `FLAG_F` determines integer/float)
  - **Effect:**
