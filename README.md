@@ -112,6 +112,7 @@ The **Verilog** implementation realizes the GraphX VM in hardware for parallel g
 ## Authors
 
 Developed by **Austin Hamilton**
+
 M.S. in Computer Science - East Tennessee State University
 
 ---
