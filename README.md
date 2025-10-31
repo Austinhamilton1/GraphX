@@ -1,6 +1,6 @@
 # GraphX: A Graph Processing Accelerator
 
-**GraphX** is a custom graph processing accelerator designed to efficiently execute graph algorithms such as PageRank, BFS, and triangle counting using a compact, parallel instruction set architecture (ISA).  
+**GraphX** is a custom graph processing accelerator designed to efficiently execute graph algorithms such as PageRank, BFS, and Connected Components using a compact, parallel instruction set architecture (ISA).  
 The project consists of two major components:
 - A **C-based Virtual Machine (VM)** implementation that simulates the ISA and executes single core graph workloads.
 - A **Verilog-based FPGA implementation** that realizes the same ISA in hardware for high-performance, multicore graph analytics.
@@ -93,11 +93,11 @@ The **Verilog** implementation realizes the GraphX VM in hardware for parallel g
 ---
 
 ## Future Extensions
- - Add memory hierarchy documentation (L1 cache, scratchpad, shared memory)
- - Extend instruction set for graph-specific operations (e.g., `RELAX`, `PUSH_EDGE`)
- - Develop compiler frontend for automatic graph algorithm translation
- - Incorporate performance counters and profiling support in FPGA version
-
+ - [ ] Add memory hierarchy documentation (L1 cache, scratchpad, shared memory)
+ - [ ] Extend instruction set for graph-specific operations (e.g., `RELAX`, `PUSH_EDGE`)
+ - [ ] Develop compiler frontend for automatic graph algorithm translation
+ - [ ] Incorporate performance counters and profiling support in FPGA version
+ - [ ] Vector instructions for SIMD architecture
 ---
 
 ## Documentation
