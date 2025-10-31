@@ -102,7 +102,9 @@ The **Verilog** implementation realizes the GraphX VM in hardware for parallel g
 
 ## Documentation
  - [`isa.md`](docs/isa.md): Complete instruction set specification, including encoding, timing behavior, and usage.
- - [`architecture.md`](docs/architecture.md): Planned hardware design, memory hierarchy, and synchronization model.
+ - [`memory.md`](docs/memory.md): In depth overview of memory hierarchy, including internal and external memory.
+ - [`multicore.md`](docs/multicore.md): Describes the interconnect between cores on the hardware implementation.
+ - [`synchronization.md`](docs/synchronization.md): Explains resource synchronization and core communication.
  - [`examples/`](docs/examples): Sample programs (PageRank, BFS, counting triangles).
 
 ---

@@ -454,22 +454,40 @@ MOVC Ftmp2, Rtmp4           ; Ftmp2 = (float)Rtmp4
 
 ### `LD`
  - **Opcode:** 0x13
- - **Operands:** 
+ - **Operands:** Destination register holds register to load into, source register or immediate value determines place in memory to read from (`FLAG_I` determines if the address is stored in a register or immediate value, `FLAG_F` determines if reading a float or integer)
  - **Effect:**
-    -
+    - Read `memory[Src1]` or `memory[Imm]`
+    - Store the value into `Dest`
  - **Usage:**
 ```
-
+...
+LD Rtmp5, #2                ; Read memory[2] into Rtmp5
+...
+LD Rtmp5, Rtmp8             ; Read memory[Rtmp8] into Rtmp5
+...
+LD Ftmp1, #1                ; Read memory[1] into Ftmp1
+...
+LD Ftmp12, Rtmp1            ; Read memory[Rtmp1] into Ftmp12
+...
 ```
 
 ### `ST`
  - **Opcode:** 0x14
- - **Operands:** 
+ - **Operands:** Destination register holds register to write to memory, source register or immediate value determines place in memory to write to (`FLAG_I` determines if the address is stored in a register or immediate value, `FLAG_F` determines if reading a float or integer)
  - **Effect:**
-    -
+    - Read the value from `Dest`
+    - Store the value in either `memory[Src1]` or `memory[Imm]`
  - **Usage:**
 ```
-
+...
+ST Rtmp1, #32               ; memory[32] = Rtmp1
+...
+ST Rtmp9, Rtmp8             ; memory[Rtmp8] = Rtmp9
+...
+ST Ftmp1, #1                ; memory[1] = Ftmp1
+...
+ST Ftmp9, Rtmp9             ; memory[Rtmp9] = Ftmp9
+...
 ```
 
 ### `FPUSH`
