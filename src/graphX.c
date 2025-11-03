@@ -504,25 +504,35 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         break;
     case VSET:
         // Vectorized set
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VF[arg1][i] = farg;
+        if(flags & FLAG_I) {
+            if(flags & FLAG_F) {
+                for(int i = 0; i < LANE_SIZE; i++) {
+                    vm->VF[arg1][i] = farg;
+                }
+            } else {
+                for(int i = 0; i < LANE_SIZE; i++) {
+                    vm->VR[arg1][i] = arg3;
+                }
             }
         } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VR[arg1][i] = arg3;
+            if(flags & FLAG_F) {
+                for(int i = 0; i < LANE_SIZE; i++) {
+                    vm->VF[arg1][i] = vm->F[arg2];
+                }
+            } else {
+                for(int i = 0; i < LANE_SIZE; i++) {
+                    vm->VR[arg1][i] = vm->R[arg2];
+                }
             }
         }
         break;
     case VSUM:
         // Vectorized reduce, sum
         if(flags & FLAG_F) {
-            vm->F[arg1] = 0.0f;
             for(int i = 0; i < LANE_SIZE; i++) {
                 vm->F[arg1] += vm->VF[arg2][i];
             }
         } else {
-            vm->R[arg1] = 0;
             for(int i = 0; i < LANE_SIZE; i++) {
                 vm->R[arg1] += vm->VR[arg2][i];
             }
