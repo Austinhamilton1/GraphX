@@ -96,13 +96,25 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | `FSWAP` | 24 | Swap the frontier with the next frontier | `swap(frontier, next_frontier)` | None |
 | `FFILL` | 25 | Fill the frontier with all nodes in the graph | `for(node in graph_nodes) do push(froniter, node)` | None |
 
+### Vectorized Instructions
+| **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
+| ------------ | ---------- | --------------- | ------------- | --------- |
+| `VADD` | 26 | Vectorized addition | `Dest[0:3] = Src1[0:3] + Src2[0:3]` | `FLAG_F` |
+| `VSUB` | 27 | Vectorized subtraction | `Dest[0:3] = Src1[0:3] - Src2[0:3]` | `FLAG_F` |
+| `VMUL` | 28 | Vectorized multiplication | `Dest[0:3] = Src1[0:3] * Src2[0:3]` | `FLAG_F` |
+| `VDIV` | 29 | Vectorized division | `Dest[0:3] = Src1[0:3] / Src2[0:3]` | `FLAG_F` |
+| `VLD` | 30 | Vectorized load | `Dest[0:3] = memory[Imm:Imm+3]` or `Dest[0:3] = memory[Src1:Src1+3]` | `FLAG_I`, `FLAG_F` |
+| `VST` | 31 | Vectorized store | `memory[Imm:Imm+3] = Dest[0:3]` or `memory[Src1:Src1+3] = Dest[0:3]` | `FLAG_I`, `FLAG_F` |
+| `VSET` | 32 | Set all values in a vector to an immediate value | `Dest[0:3] = Imm` | `FLAG_F` |
+| `VSUM` | 33 | Sum all values in a vector and store result in a register | `Dest = sum(Src1[0:3])` | `FLAG_F` |
+
 ### Multicore/Synchronization Control
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
-| `PARALLEL` | 26 | Code implemented until the next `BARRIER` will run on all cores | Not Implemented | None |
-| `BARRIER` | 27 | Ensure all cores reach this point before continuing, then switch back to single core execution | Not Implemented | None |
-| `LOCK` | 28 | Mutual exclusion lock on a resource | Not Implemented | None |
-| `UNLOCK` | 29 | Unlock a resource | Not Implemented | None |
+| `PARALLEL` | 34 | Code implemented until the next `BARRIER` will run on all cores | Not Implemented | None |
+| `BARRIER` | 35 | Ensure all cores reach this point before continuing, then switch back to single core execution | Not Implemented | None |
+| `LOCK` | 36 | Mutual exclusion lock on a resource | Not Implemented | None |
+| `UNLOCK` | 37 | Unlock a resource | Not Implemented | None |
 
 ## Instruction Semantics
 
