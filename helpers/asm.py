@@ -20,6 +20,7 @@ REGISTER_ARG_MASK       = 0x000000FF
 IMMEDIATE_ARG_MASK      = 0xFFFFFFFF
 FLAG_I                  = 0x00000001
 FLAG_F                  = 0x00000002
+FLAG_V                  = 0x00000004
 
 register_names = {
     'Rnode': 0,
@@ -60,38 +61,43 @@ register_names = {
     'f15': 35,
     'f16': 36,
     'Fzero': 37,
-    'vr1': 38,
-    'vr2': 39,
-    'vr3': 40,
-    'vr4': 41,
-    'vr5': 42,
-    'vr6': 43,
-    'vr7': 44,
-    'vr8': 45,
-    'vr9': 46,
-    'vr10': 47,
-    'vr11': 48,
-    'vr12': 49,
-    'vr13': 50,
-    'vr14': 51,
-    'vr15': 52,
-    'vr16': 53,
-    'vf1': 54,
-    'vf2': 55,
-    'vf3': 56,
-    'vf4': 57,
-    'vf5': 58,
-    'vf6': 59,
-    'vf7': 60,
-    'vf8': 61,
-    'vf9': 62,
-    'vf10': 63,
-    'vf11': 64,
-    'vf12': 65,
-    'vf13': 66,
-    'vf14': 67,
-    'vf15': 68,
-    'vf16': 69,
+    'vRnode': 38,
+    'vRnbr': 39,
+    'vRval': 40,
+    'vr1': 41,
+    'vr2': 42,
+    'vr3': 43,
+    'vr4': 44,
+    'vr5': 45,
+    'vr6': 46,
+    'vr7': 47,
+    'vr8': 48,
+    'vr9': 49,
+    'vr10': 50,
+    'vr11': 51,
+    'vr12': 52,
+    'vr13': 53,
+    'vr14': 54,
+    'vr15': 55,
+    'vr16': 56,
+    'vf1': 57,
+    'vf2': 58,
+    'vf3': 59,
+    'vf4': 60,
+    'vf5': 61,
+    'vf6': 62,
+    'vf7': 63,
+    'vf8': 64,
+    'vf9': 65,
+    'vf10': 66,
+    'vf11': 67,
+    'vf12': 68,
+    'vf13': 69,
+    'vf14': 70,
+    'vf15': 71,
+    'vf16': 72,
+    'rMask': 0xFE,
+    'fMask': 0xFF,
 }
 
 def reg_type(reg):
@@ -99,7 +105,7 @@ def reg_type(reg):
         return 'r'
     if reg >= register_names['f1'] and reg <= register_names['Fzero']:
         return 'f'
-    if reg >= register_names['vr1'] and reg <= register_names['vr16']:
+    if reg >= register_names['vRnode'] and reg <= register_names['vr16']:
         return 'vr'
     if reg >= register_names['vf1'] and reg <= register_names['vf16']:
         return 'vf'
@@ -141,10 +147,12 @@ OPCODES = {
     'VST': 31,      # Vector store
     'VSET': 32,     # Vector broadcast
     'VSUM': 33,     # Vector sum
-    'PARALLEL': 34, # Run next block of code with multicore mode
-    'BARRIER': 35,  # Wait until all cores reach this code before continuing
-    'LOCK': 36,     # Mutual exclusion lock on a resource
-    'UNLOCK': 37,   # Unlock mutual exclusion lock
+    'VMIN': 34,     # Vector min
+    'VMAX': 35,     # Vector max
+    # 'PARALLEL': 34, # Run next block of code with multicore mode
+    # 'BARRIER': 35,  # Wait until all cores reach this code before continuing
+    # 'LOCK': 36,     # Mutual exclusion lock on a resource
+    # 'UNLOCK': 37,   # Unlock mutual exclusion lock
 }
 
 def encode_instruction(op, args):
@@ -265,9 +273,9 @@ def encode_instruction(op, args):
             r2 -= register_names['vf1']
             flags = FLAG_F
         elif rtype == 'vr':
-            r0 -= register_names['vr1']
-            r1 -= register_names['vr1']
-            r2 -= register_names['vr1']
+            r0 -= register_names['vRnode']
+            r1 -= register_names['vRnode']
+            r2 -= register_names['vRnode']
             flags = 0x0
         else:
             raise ValueError('Invalid register')
@@ -288,7 +296,7 @@ def encode_instruction(op, args):
                 r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
                 flags = FLAG_I | FLAG_F
             elif rtype == 'vr':
-                r0 -= register_names['vr1']
+                r0 -= register_names['vRnode']
                 r1 = int(args[1][1:])
                 flags = FLAG_I
             else:
@@ -302,8 +310,8 @@ def encode_instruction(op, args):
                 r1 = (r1 & REGISTER_ARG_MASK) << 32
                 flags = FLAG_F
             elif rtype == 'vr':
-                r0 -= register_names['vr1']
-                r1 = int(args[1]) - register_names['vr1']
+                r0 -= register_names['vRnode']
+                r1 = int(args[1]) - register_names['vRnode']
 
                 r1 = (r1 & REGISTER_ARG_MASK) << 32
                 flags = 0x0

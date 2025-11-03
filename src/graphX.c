@@ -102,11 +102,15 @@ int decode(graphX_vm_t *vm, uint64_t data) {
     case VLD:
     case VST:
     case VSET:
-    case VSUM:
-    case PARALLEL:
-    case BARRIER:
-    case LOCK:
-    case UNLOCK:
+    case VSUMR:
+    case VMIN:
+    case VMAX:
+    case VMINR:
+    case VMAXR:
+    // case PARALLEL:
+    // case BARRIER:
+    // case LOCK:
+    // case UNLOCK:
         return flags;
     }
 
@@ -316,18 +320,30 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         }
         break;
     case MOV:
-        // Move one value to an integer register
+        // Move a value to a register
         if(flags & FLAG_I) {
             if(flags & FLAG_F) {
                 vm->F[arg1] = farg;
             } else {
-                vm->R[arg1] = arg3;
+                if(arg1 == 0xFE) {
+                    vm->rMask = (uint8_t)arg3;
+                } else if(arg1 == 0xFF) {
+                    vm->fMask = (uint8_t)arg3;
+                } else {
+                    vm->R[arg1] = arg3;
+                }
             }
         } else {
             if(flags & FLAG_F) {
                 vm->F[arg1] = vm->F[arg2];
             } else {
-                vm->R[arg1] = vm->R[arg2];
+                if(arg1 == 0xFE) {
+                    vm->rMask = vm->R[arg2];
+                } else if(arg1 == 0xFF) {
+                    vm->fMask = vm->R[arg2];
+                } else {
+                    vm->R[arg1] = vm->R[arg2];
+                }
             }
         }
         break;
@@ -526,7 +542,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             }
         }
         break;
-    case VSUM:
+    case VSUMR:
         // Vectorized reduce, sum
         if(flags & FLAG_F) {
             for(int i = 0; i < LANE_SIZE; i++) {
@@ -538,16 +554,78 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             }
         }
         break;
+    case VMIN:
+        // Vectorized minimum
+        if(flags & FLAG_F) {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VF[arg1][i] = vm->VF[arg2][i] < vm->VF[arg3][i] ? vm->VF[arg2][i] : vm->VF[arg3][i];
+            }
+        } else {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VR[arg1][i] = vm->VR[arg2][i] < vm->VR[arg3][i] ? vm->VR[arg2][i] : vm->VR[arg3][i];
+            }
+        }
+        break;
+    case VMAX:
+        // Vectorized maximum
+        if(flags & FLAG_F) {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VF[arg1][i] = vm->VF[arg2][i] > vm->VF[arg3][i] ? vm->VF[arg2][i] : vm->VF[arg3][i];
+            }
+        } else {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VR[arg1][i] = vm->VR[arg2][i] > vm->VR[arg3][i] ? vm->VR[arg2][i] : vm->VR[arg3][i];
+            }
+        }
+        break;
+    case VMINR:
+        // Vectorized min reduction
+        if(flags & FLAG_F) {
+            vm->F[arg1] = vm->VF[arg2][0];
+            for(int i = 0; i < LANE_SIZE; i++) {
+                if(vm->VF[arg2][i] < vm->F[arg1]) {
+                    vm->F[arg1] = vm->VF[arg2][i];
+                }
+            }
+        } else {
+            vm->R[arg1] = vm->VR[arg2][0];
+            for(int i = 0; i < LANE_SIZE; i++) {
+                if(vm->VR[arg2][i] < vm->R[arg1]) {
+                    vm->R[arg1] = vm->VR[arg2][i];
+                }
+            }
+        }
+        break;
+    case VMAXR:
+        // Vectorized max reduction
+        if(flags & FLAG_F) {
+            vm->F[arg1] = vm->VF[arg2][0];
+            for(int i = 0; i < LANE_SIZE; i++) {
+                if(vm->VF[arg2][i] > vm->F[arg1]) {
+                    vm->F[arg1] = vm->VF[arg2][i];
+                }
+            }
+        } else {
+            vm->R[arg1] = vm->VR[arg2][0];
+            for(int i = 0; i < LANE_SIZE; i++) {
+                if(vm->VR[arg2][i] > vm->R[arg1]) {
+                    vm->R[arg1] = vm->VR[arg2][i];
+                }
+            }
+        }
+        break;
     
     /* 
      * Concurrency doesn't apply to the VM, this is left
      * to be implemented in hardware. The FPGA implementation
      * of this VM will include these.
      */
+    /*
     case PARALLEL:
     case BARRIER:
     case LOCK:
     case UNLOCK:
+    */
         break;
     default:
         return VM_ERROR;

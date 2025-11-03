@@ -17,6 +17,7 @@
 
 #define FLAG_I      0x1     // Instruction is I-type
 #define FLAG_F      0x2     // Instruction is float type
+#define FLAG_R      0x4     // Instruction is vector type
 
 #define FLAG_ZERO   0x1     // Check if CMP resulted in zero
 #define FLAG_NEG    0x2     // Check if CMP resulted in negative
@@ -71,15 +72,19 @@ typedef enum {
     VLD,        // Load a vector from memory
     VST,        // Store a vector to memory
     VSET,       // Broadcast constant
-    VSUM,       // Sum of the vector
+    VSUMR,      // Sum reduction of the vector
+    VMIN,       // Minimum of two vectors
+    VMAX,       // Maximum of two vectors
+    VMINR,      // Minimum reduction of a vector
+    VMAXR,      // Maximum reduction of a vector
 
     /* Multicore/synchronization control */
     /* These are left unimplemented for the VM */
     /* (only work on hardware) */
-    PARALLEL,   // Initiate a parallel region
-    BARRIER,    // Wait for all cores to reach before continuing
-    LOCK,       // Mutual exclusion lock
-    UNLOCK,     // Mutual exclusion unlock
+    // PARALLEL,   // Initiate a parallel region
+    // BARRIER,    // Wait for all cores to reach before continuing
+    // LOCK,       // Mutual exclusion lock
+    // UNLOCK,     // Mutual exclusion unlock
 } instruction;
 
 enum {
@@ -129,7 +134,10 @@ enum {
 };
 
 enum {
-    VR_1 = 0,
+    VR_NODE = 0,
+    VR_NBR,
+    VR_VAL,
+    VR_1,
     VR_2,
     VR_3,
     VR_4,
@@ -235,6 +243,9 @@ typedef struct graphX_vm_t {
     /* Integer vector register file */
     union {
         struct {
+            uint32_t    vRnode[LANE_SIZE];      // Vector Rnode
+            uint32_t    vRnbr[LANE_SIZE];       // Vector Rnbr
+            uint32_t    vRval[LANE_SIZE];       // Vector Rval
             uint32_t    vr1[LANE_SIZE];         // Vector register
             uint32_t    vr2[LANE_SIZE];         // Vector register
             uint32_t    vr3[LANE_SIZE];         // Vector register
@@ -258,25 +269,28 @@ typedef struct graphX_vm_t {
     /* Float vector register file */
     union {
         struct {
-            float    vf1[LANE_SIZE];            // Vector register
-            float    vf2[LANE_SIZE];            // Vector register
-            float    vf3[LANE_SIZE];            // Vector register
-            float    vf4[LANE_SIZE];            // Vector register
-            float    vf5[LANE_SIZE];            // Vector register
-            float    vf6[LANE_SIZE];            // Vector register
-            float    vf7[LANE_SIZE];            // Vector register
-            float    vf8[LANE_SIZE];            // Vector register
-            float    vf9[LANE_SIZE];            // Vector register
-            float    vf10[LANE_SIZE];           // Vector register
-            float    vf11[LANE_SIZE];           // Vector register
-            float    vf12[LANE_SIZE];           // Vector register
-            float    vf13[LANE_SIZE];           // Vector register
-            float    vf14[LANE_SIZE];           // Vector register
-            float    vf15[LANE_SIZE];           // Vector register
-            float    vf16[LANE_SIZE];           // Vector register
+            float       vf1[LANE_SIZE];         // Vector register
+            float       vf2[LANE_SIZE];         // Vector register
+            float       vf3[LANE_SIZE];         // Vector register
+            float       vf4[LANE_SIZE];         // Vector register
+            float       vf5[LANE_SIZE];         // Vector register
+            float       vf6[LANE_SIZE];         // Vector register
+            float       vf7[LANE_SIZE];         // Vector register
+            float       vf8[LANE_SIZE];         // Vector register
+            float       vf9[LANE_SIZE];         // Vector register
+            float       vf10[LANE_SIZE];        // Vector register
+            float       vf11[LANE_SIZE];        // Vector register
+            float       vf12[LANE_SIZE];        // Vector register
+            float       vf13[LANE_SIZE];        // Vector register
+            float       vf14[LANE_SIZE];        // Vector register
+            float       vf15[LANE_SIZE];        // Vector register
+            float       vf16[LANE_SIZE];        // Vector register
         };
-        float        VF[VF_COUNT][LANE_SIZE];   // Register indexer
+        float           VF[VF_COUNT][LANE_SIZE];// Register indexer
     };
+
+    uint8_t             rMask;                  // Mask for integer vectors
+    uint8_t             fMask;                  // Mask for float vectors
 
     /* Memory */
     uint64_t            program[PROGRAM_SIZE];  // Instructions to run
