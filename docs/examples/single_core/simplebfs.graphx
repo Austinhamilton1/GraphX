@@ -1,13 +1,13 @@
 ;;; Simple BFS on a very small toy graph
 
 .code
-MOV Rtmp1, #0       ; Start with the first node
-FPUSH Rtmp1          ; Start the frontier
+MOV r1, #0       ; Start with the first node
+FPUSH r1          ; Start the frontier
 
-MOV Rtmp2, #1       ; Mark the first node as visited
-ST Rtmp2, Rtmp1
+MOV r2, #1       ; Mark the first node as visited
+ST r2, r1
 
-MOV Rtmp1, #65535   ;Start of BFS result (works backwards)
+MOV r1, #65535   ;Start of BFS result (works backwards)
 
 FSWAP               ; Swap the frontiers
 
@@ -15,8 +15,8 @@ loop:
     FEMPTY
     BZ next_level
     FPOP Rnode       ; Get next node
-    ST Rnode, Rtmp1
-    SUB Rtmp1, Rtmp1, #1
+    ST Rnode, r1
+    SUB r1, r1, #1
     NITER #0
 
 neighbor_loop:
@@ -24,13 +24,13 @@ neighbor_loop:
     BZ loop
 
     ; Check if visited
-    LD Rtmp2, Rnbr  ; visited[neighbor]
-    CMP Rtmp2, Rzero
+    LD r2, Rnbr  ; visited[neighbor]
+    CMP r2, Rzero
     BNZ neighbor_loop
 
     ; If not visited, mark and push
-    MOV Rtmp2, #1   ; Need to store a 1 at visited[neighbor]
-    ST Rtmp2, Rnbr  ; Store the 1 at visited[neighbor]
+    MOV r2, #1   ; Need to store a 1 at visited[neighbor]
+    ST r2, Rnbr  ; Store the 1 at visited[neighbor]
 
     FPUSH Rnbr       ; Add to frontier
     JMP neighbor_loop

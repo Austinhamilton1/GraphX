@@ -2,25 +2,25 @@
 ;;; Brute force method
 
 .code
-MOV Racc, #0                ; Final Count
-MOV Rtmp1, #24              ; Current node
+MOV r16, #0                ; Final Count
+MOV r1, #24              ; Current node
 
 loop:                       ; Main loop
     ; Check for exit condition ;
-    CMP Rtmp1, Rzero
+    CMP r1, Rzero
     BZ done
 
     ; Start iteration on current node ;
-    MOV Rnode, Rtmp1
+    MOV Rnode, r1
     NITER #0
 
-    SUB Rtmp1, Rtmp1, #1      ; Increment pointer
+    SUB r1, r1, #1      ; Increment pointer
 
 a_loop:
     NNEXT #0                 ; Get the next neighbor
     BZ loop
     
-    MOV Rtmp2, Rnbr         ; store state
+    MOV r2, Rnbr         ; store state
 
     NITER 1                 ; Initialize the second iterator
 
@@ -38,23 +38,23 @@ b_loop:
     CMP Rnode, Rnbr
     BGE b_loop
     
-    MOV Rtmp3, Rnode        ; Store state
+    MOV r3, Rnode        ; Store state
     
     ; Check to see if a and b are neighbors ;
-    ; (a is in Rtmp2, b is in Rnbr) ;
-    MOV Rnode, Rtmp2
+    ; (a is in r2, b is in Rnbr) ;
+    MOV Rnode, r2
     HASE
     BNZ found_triangle
-    MOV Rnode, Rtmp3        ; Restore state
+    MOV Rnode, r3        ; Restore state
     JMP b_loop
 
 found_triangle:
-    ADD, Racc, Racc, #1
-    MOV Rnode, Rtmp3
+    ADD, r16, r16, #1
+    MOV Rnode, r3
     JMP b_loop
 
 done:
-    ST Racc, #0              ; Store the final result
+    ST r16, #0              ; Store the final result
     HALT
 
 ;;; This is a lattice graph. 5x5. For each sqaure in

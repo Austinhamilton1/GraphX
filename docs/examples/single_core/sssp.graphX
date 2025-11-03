@@ -4,17 +4,17 @@
 ;;; will be stored in memory[i].
 
 .code
-MOV Racc, #5                    ; Loop counter (number of nodes-1)
+MOV r16, #5                    ; Loop counter (number of nodes-1)
 
 ; Store a 0 at first node ;
-MOV Rtmp1, #0                   ; Value of first node
-LD Rtmp2, #65535                ; First node
-ST Rtmp1, Rtmp2
+MOV r1, #0                   ; Value of first node
+LD r2, #65535                ; First node
+ST r1, r2
 
 loop:
-    CMP Racc, Rzero             ; Check if done iterating
+    CMP r16, Rzero             ; Check if done iterating
     BZ done
-    SUB Racc, Racc, #1          ; Decrement counter
+    SUB r16, r16, #1          ; Decrement counter
 
     EITER                       ; Start edge iteration
 
@@ -23,18 +23,18 @@ edge_loop:
     BZ loop                     ; Done iterating restart loop
 
     ; Check for not visited ;
-    LD Rtmp1, Rnode             ; dist[u]
-    MOV Rtmp2, #65535
-    CMP Rtmp1, Rtmp2
+    LD r1, Rnode             ; dist[u]
+    MOV r2, #65535
+    CMP r1, r2
     BZ edge_loop
 
     ; Compare current shortest distance to new distance ;
-    ADD Rtmp1, Rtmp1, Rval      ; dist[u] + wt
-    LD Rtmp3, Rnbr              ; dist[v]
-    CMP Rtmp1, Rtmp3
+    ADD r1, r1, Rval      ; dist[u] + wt
+    LD r3, Rnbr              ; dist[v]
+    CMP r1, r3
     BGE edge_loop
 
-    ST Rtmp1, Rnbr
+    ST r1, Rnbr
     JMP edge_loop
 
 done:

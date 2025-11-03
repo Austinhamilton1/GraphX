@@ -28,7 +28,7 @@ static const char *opcodes[] = {
     "DEG",
     "ADD",
     "SUB",
-    "MULT",
+    "MUL",
     "DIV",
     "CMP",
     "MOV",
@@ -40,6 +40,14 @@ static const char *opcodes[] = {
     "FEMPTY",
     "FSWAP",
     "FFILL",
+    "VADD",
+    "VSUB",
+    "VMUL",
+    "VDIV",
+    "VLD",
+    "VST",
+    "VSET",
+    "VSUM",
     "PARALLEL",
     "BARRIER",
     "LOCK",
@@ -83,13 +91,13 @@ int main(int argc, char **argv) {
  *     [0:4) -> code_len (uint32_t)
  *     [4:8) -> row_index_len (uint32_t)
  *     [8:12) -> col_index_len (uint32_t)
- *     [12:16) -> values_len section
- *     [16:20) -> mem length
- *     [20:...] -> code section
- *     [...] -> row index section
- *     [...] -> column index section
- *     [...] -> values section
- *     [...] -> memory section
+ *     [12:16) -> values_len (uint32_t)
+ *     [16:20) -> mem length (uint32_t)
+ *     [20:...] -> code section (uint64_t[])
+ *     [...] -> row index section (int32_t[])
+ *     [...] -> column index section (int32_t[])
+ *     [...] -> values section (int32_t[])
+ *     [...] -> memory section (int32_t[])
  * 
  * Arguments:
  *     graphX_vm_t *vm - The VM to run the program on.
@@ -175,9 +183,9 @@ int graphX_load(graphX_vm_t *vm, const char *filename) {
 void debug_hook(graphX_vm_t *vm) {
     printf("PC=%u, ISA=%s, FLAGS=%u\n", vm->PC, opcodes[vm->ISA], vm->FLAGS);
     printf("niter0=%u, niter1=%u, niter2=%u, niter3=%u, eiter=%u\n", vm->niter[0], vm->niter[1], vm->niter[2], vm->niter[3], vm->eiter);
-    printf("Rnode=%u, Rnbr=%u, Rval=%u, Racc=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->Racc);
-    printf("Rtmp1=%u, Rtmp2=%u, Rtmp3=%u, Rtmp4=%u\n", vm->Rtmp1, vm->Rtmp2, vm->Rtmp3, vm->Rtmp4);
-    printf("Facc=%0.5f, Ftmp1=%0.5f, Ftmp2=%0.5f, Ftmp3=%0.5f, Ftmp4=%0.5f\n", vm->Facc, vm->Ftmp1, vm->Ftmp2, vm->Ftmp3, vm->Ftmp4);
+    printf("Rnode=%u, Rnbr=%u, Rval=%u, r16=%u\n", vm->Rnode, vm->Rnbr, vm->Rval, vm->r16);
+    printf("r1=%u, r2=%u, r3=%u, r4=%u\n", vm->r1, vm->r2, vm->r3, vm->r4);
+    printf("f16=%0.5f, f1=%0.5f, f2=%0.5f, f3=%0.5f, f4=%0.5f\n", vm->f16, vm->f1, vm->f2, vm->f3, vm->f4);
     printf("Frontier:\n");
     printf("Front=%lu, Back=%lu\n", vm->frontier->backend.queue.front, vm->frontier->backend.queue.back);
     for(int i = 0; i < 10; i++)
@@ -237,6 +245,6 @@ void exit_hook(graphX_vm_t *vm, int result) {
         printf("VM execution failed.\n");
         vm->PC--; // Get the last executed instruction
         printf("Execution failed on PC=%u.\n", vm->PC);
-        printf("Inst=%s, A0=%u, A1=%u, A2=%u.\n", opcodes[(vm->program[vm->PC] >> 27) & 0x1F], vm->A0, vm->A1, vm->A2);
+        printf("Inst=%s, A0=%u, A1=%u, A2=%u.\n", opcodes[(vm->program[vm->PC] >> 56) & 0xFF], vm->A0, vm->A1, vm->A2);
     }
 }

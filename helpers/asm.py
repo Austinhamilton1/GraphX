@@ -21,6 +21,89 @@ IMMEDIATE_ARG_MASK      = 0xFFFFFFFF
 FLAG_I                  = 0x00000001
 FLAG_F                  = 0x00000002
 
+register_names = {
+    'Rnode': 0,
+    'Rnbr': 1,
+    'Rval': 2,
+    'r1': 3,
+    'r2': 4,
+    'r3': 5,
+    'r4': 6,
+    'r5': 7,
+    'r6': 8,
+    'r7': 9,
+    'r8': 10,
+    'r9': 11,
+    'r10': 12,
+    'r11': 13,
+    'r12': 14,
+    'r13': 15,
+    'r14': 16,
+    'r15': 17,
+    'r16': 18,
+    'Rzero': 19,
+    'Rcore': 20,
+    'f1': 21,
+    'f2': 22,
+    'f3': 23,
+    'f4': 24,
+    'f5': 25,
+    'f6': 26,
+    'f7': 27,
+    'f8': 28,
+    'f9': 29,
+    'f10': 30,
+    'f11': 31,
+    'f12': 32,
+    'f13': 33,
+    'f14': 34,
+    'f15': 35,
+    'f16': 36,
+    'Fzero': 37,
+    'vr1': 38,
+    'vr2': 39,
+    'vr3': 40,
+    'vr4': 41,
+    'vr5': 42,
+    'vr6': 43,
+    'vr7': 44,
+    'vr8': 45,
+    'vr9': 46,
+    'vr10': 47,
+    'vr11': 48,
+    'vr12': 49,
+    'vr13': 50,
+    'vr14': 51,
+    'vr15': 52,
+    'vr16': 53,
+    'vf1': 54,
+    'vf2': 55,
+    'vf3': 56,
+    'vf4': 57,
+    'vf5': 58,
+    'vf6': 59,
+    'vf7': 60,
+    'vf8': 61,
+    'vf9': 62,
+    'vf10': 63,
+    'vf11': 64,
+    'vf12': 65,
+    'vf13': 66,
+    'vf14': 67,
+    'vf15': 68,
+    'vf16': 69,
+}
+
+def reg_type(reg):
+    if reg >= register_names['Rnode'] and reg <= register_names['Rcore']:
+        return 'r'
+    if reg >= register_names['f1'] and reg <= register_names['Fzero']:
+        return 'f'
+    if reg >= register_names['vr1'] and reg <= register_names['vr16']:
+        return 'vr'
+    if reg >= register_names['vf1'] and reg <= register_names['vf16']:
+        return 'vf'
+
 '''=== Instruction Encoding ====================================================='''
 
 OPCODES = {
@@ -82,37 +165,43 @@ def encode_instruction(op, args):
         return opcode | (FLAG_I << 48) | imm
     
     # R-R-R/I operations
-    elif op in ['ADD', 'SUB', 'MULT', 'DIV']:
+    elif op in ['ADD', 'SUB', 'MUL', 'DIV']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
         r1 = int(args[1]) & REGISTER_ARG_MASK
+
+        rtype = reg_type(r0)
         
         # Check for immediate instruction
         if args[2].startswith('#'):
             # Check for float instruction
-            if r0 >= 22:
+            if rtype == 'f':
                 # Set the correct register indexes
-                r0 -= 22
-                r1 -= 22
+                r0 -= register_names['f1']
+                r1 -= register_names['f1']
 
                 # Set immediate value and flags
                 r2 = struct.unpack('<I', struct.pack('<f', float(args[2][1:])))[0] & IMMEDIATE_ARG_MASK
                 flags = FLAG_I | FLAG_F
-            else:
+            elif rtype == 'r':
                 r2 = int(args[2][1:]) & IMMEDIATE_ARG_MASK
                 flags = FLAG_I
+            else:
+                raise ValueError('Invalid register')
         else:
             # Check for float instruction
-            if r0 >= 22:
+            if rtype == 'f':
                 # Set the correct register indexes
-                r0 -= 22
-                r1 -= 22
+                r0 -= register_names['f1']
+                r1 -= register_names['f1']
 
                 # Set correct register index and flags
-                r2 = ((int(args[2]) - 22) & REGISTER_ARG_MASK) << 24
+                r2 = ((int(args[2]) - register_names['f1']) & REGISTER_ARG_MASK) << 24
                 flags = FLAG_F
-            else:
+            elif rtype == 'r':
                 r2 = (int(args[2]) & REGISTER_ARG_MASK) << 24
                 flags = 0x0
+            else:
+                raise ValueError('Invalid register')
 
         return opcode | (flags << 48) | (r0 << 40) | (r1 << 32) | r2
     
@@ -120,40 +209,108 @@ def encode_instruction(op, args):
     elif op in ['MOV', 'CMP', 'MOVC', 'LD', 'ST']:
         r0 = int(args[0]) & REGISTER_ARG_MASK
 
+        rtype = reg_type(r0)
+
         # Check for immediate instruction
         if args[1].startswith('#'):
             # Check for float instruction
-            if r0 >= 22:
+            if rtype == 'f':
                 # Set the correct register indexes
-                r0 -= 22
+                r0 -= register_names['f1']
 
                 # Set immediate value and flags
                 r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
                 flags = FLAG_I | FLAG_F
-            else:
+            elif rtype == 'r':
                 r1 = int(args[1][1:]) & IMMEDIATE_ARG_MASK
                 flags = FLAG_I
+            else:
+                raise ValueError('Invalid register')
         else:
             # Check for float instruction
-            if r0 >= 22:
+            if rtype == 'f':
                 # Set the correct register indexes
-                r0 -= 22
+                r0 -= register_names['f1']
                 r1 = int(args[1])
-                if r1 >= 22:
-                    r1 -= 22
+                if reg_type(r1) == 'f':
+                    r1 -= register_names['f1']
 
                 r1 = (r1 & REGISTER_ARG_MASK) << 32
                 flags = FLAG_F
-            else:
+            elif rtype == 'r':
                 r1 = (int(args[1]) & REGISTER_ARG_MASK) << 32
                 flags = 0x0
+            else:
+                raise ValueError('Invalid register')
 
         return opcode | (flags << 48) | (r0 << 40) | r1
 
-    # Register operations
+    # R operations
     elif op in ['FPUSH', 'FPOP', 'DEG']:
         r = int(args[0]) & REGISTER_ARG_MASK
         return opcode | (r << 40)
+    
+    # R-R-R vector operations
+    elif op in ['VADD', 'VSUB', 'VMUL', 'VDIV']:
+        r0 = int(args[0]) & REGISTER_ARG_MASK
+        r1 = int(args[1]) & REGISTER_ARG_MASK
+        r2 = int(args[2]) & REGISTER_ARG_MASK
+
+        rtype = reg_type(r0)
+
+        # Check for float instruction
+        if rtype == 'vf':
+            r0 -= register_names['vf1']
+            r1 -= register_names['vf1']
+            r2 -= register_names['vf1']
+            flags = FLAG_F
+        elif rtype == 'vr':
+            r0 -= register_names['vr1']
+            r1 -= register_names['vr1']
+            r2 -= register_names['vr1']
+            flags = 0x0
+        else:
+            raise ValueError('Invalid register')
+
+        return opcode | (flags << 48) | (r0 << 40) | (r1 << 36) | (r2)
+    
+    # R-R/I vector operations
+    elif op in ['VLD', 'VST', 'VSET']:
+        r0 = int(args[0]) & REGISTER_ARG_MASK
+
+        rtype = reg_type(r0)
+
+        # Check for immediate instruction
+        if args[1].startswith('#'):
+            # Check for float instruction
+            if rtype == 'vf':
+                r0 -= register_names['vf1']
+                r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
+                flags = FLAG_I | FLAG_F
+            elif rtype == 'vr':
+                r0 -= register_names['vr1']
+                r1 = int(args[1][1:])
+                flags = FLAG_I
+            else:
+                raise ValueError('Invalid register')
+        else:
+            # Check for float instruction
+            if rtype == 'vf':
+                r0 -= register_names['vf1']
+                r1 = int(args[1]) - register_names['vf1']
+
+                r1 = (r1 & REGISTER_ARG_MASK) << 32
+                flags = FLAG_F
+            elif rtype == 'vr':
+                r0 -= register_names['vr1']
+                r1 = int(args[1]) - register_names['vr1']
+
+                r1 = (r1 & REGISTER_ARG_MASK) << 32
+                flags = 0x0
+            else:
+                raise ValueError('Invalid register')
+            
+        return opcode | (flags << 48) | (r0 << 40) | r1
 
     # Invalid opcode
     else:
@@ -168,48 +325,6 @@ def parse_assembly(lines):
     mem = []
 
     code_labels = {}
-    register_names = {
-        'Rnode': 0,
-        'Rnbr': 1,
-        'Rval': 2,
-        'Racc': 3,
-        'Rtmp1': 4,
-        'Rtmp2': 5,
-        'Rtmp3': 6,
-        'Rtmp4': 7,
-        'Rtmp5': 8,
-        'Rtmp6': 9,
-        'Rtmp7': 10,
-        'Rtmp8': 11,
-        'Rtmp9': 12,
-        'Rtmp10': 13,
-        'Rtmp11': 14,
-        'Rtmp12': 15,
-        'Rtmp13': 16,
-        'Rtmp14': 17,
-        'Rtmp15': 18,
-        'Rtmp16': 19,
-        'Rzero': 20,
-        'Rcore': 21,
-        'Facc': 22,
-        'Ftmp1': 23,
-        'Ftmp2': 24,
-        'Ftmp3': 25,
-        'Ftmp4': 26,
-        'Ftmp5': 27,
-        'Ftmp6': 28,
-        'Ftmp7': 29,
-        'Ftmp8': 30,
-        'Ftmp9': 31,
-        'Ftmp10': 32,
-        'Ftmp11': 33,
-        'Ftmp12': 34,
-        'Ftmp13': 35,
-        'Ftmp14': 36,
-        'Ftmp15': 37,
-        'Ftmp16': 38,
-        'Fzero': 39,
-    }
     pc = 0
 
     # First pass (Resolve labels)

@@ -6,54 +6,54 @@
 .code
 init:
     FFILL                           ; Start with a full frontier
-    MOV Facc, #11                   ; Facc = 11.0f
-    MOV Racc, #10                   ; Racc = 10
-    MOV Rtmp1, #11                  ; Rtmp1 = 11
-    MOV Ftmp1, #1                   ; Ftmp1 = 1.0f
-    DIV Ftmp1, Ftmp1, Facc          ; Ftmp1 = 1.0f / N
+    MOV f16, #11                    ; f16 = 11.0f
+    MOV r16, #10                    ; r16 = 10
+    MOV r1, #11                     ; r1 = 11
+    MOV f1, #1                      ; f1 = 1.0f
+    DIV f1, f1, f16                 ; f1 = 1.0f / N
 
 init_loop:
     FEMPTY                          ; Check for empty frontier 
     BZ iter
 
-    FPOP Rnode                       ; Rnode = u
+    FPOP Rnode                      ; Rnode = u
 
-    ST Ftmp1, Rnode                 ; memory[u] = 1 / N
+    ST f1, Rnode                    ; memory[u] = 1 / N
     JMP init_loop
 
 reset_mem:
-    MOV Rtmp2, #0                   ; Rtmp2 = 0
+    MOV r2, #0                      ; r2 = 0
 
 reset_loop:
-    CMP Rtmp2, Rtmp1                ; Check if all values have been moved
+    CMP r2, r1                      ; Check if all values have been moved
     BZ iter
 
-    ADD Rtmp3, Rtmp2, Rtmp1         ; Rtmp3 = u + N
-    LD Ftmp1, Rtmp3                 ; Ftmp1 = PR(u)
-    ST Ftmp1, Rtmp2                 ; memory[u] = PR(u)
-    ST Fzero, Rtmp3                 ; memory[Rtmp3] = 0.0f
+    ADD r3, r2, r1                  ; r3 = u + N
+    LD f1, r3                       ; f1 = PR(u)
+    ST f1, r2                       ; memory[u] = PR(u)
+    ST Fzero, r3                    ; memory[r3] = 0.0f
     
-    ADD Rtmp2, Rtmp2, #1
+    ADD r2, r2, #1
     JMP reset_loop
 
 iter:
     ; Loop termination ;
-    CMP Racc, Rzero
+    CMP r16, Rzero
     BZ done
-    SUB Racc, Racc, #1
+    SUB r16, r16, #1
 
     FFILL                           ; Refill the frontier with all nodes
 
-    MOV Ftmp1, #1                   ; Ftmp1 = 1.0f
-    SUB Ftmp1, Ftmp1, #0.85         ; Ftmp1 = 1.0f - 0.85
-    DIV Ftmp1, Ftmp1, Facc          ; Ftmp1 = (1.0f - 0.85) / N
+    MOV f1, #1                      ; f1 = 1.0f
+    SUB f1, f1, #0.85               ; f1 = 1.0f - 0.85
+    DIV f1, f1, f16                 ; f1 = (1.0f - 0.85) / N
 
     JMP outer_loop
 
 swap_back:
-    MOV Rtmp2, Rnbr                 ; Rtmp2 = u
-    ADD Rtmp2, Rtmp2, Rtmp1         ; Rtmp2 = u + N
-    ST Ftmp2, Rtmp2                 ; new_ranks[u] = (1-d)*N + d*sum(PR(v) / L(v))
+    MOV r2, Rnbr                    ; r2 = u
+    ADD r2, r2, r1                  ; r2 = u + N
+    ST f2, r2                       ; new_ranks[u] = (1-d)*N + d*sum(PR(v) / L(v))
 
     FSWAP                           ; Swap the frontiers back
 
@@ -61,8 +61,8 @@ outer_loop:
     FEMPTY                          ; Check if frontier is empty
     BZ reset_mem
 
-    FPOP Rnbr                        ; Rnbr = u
-    MOV Ftmp2, Ftmp1                ; Ftmp2 = (1.0f - 0.85) / N
+    FPOP Rnbr                       ; Rnbr = u
+    MOV f2, f1                      ; f2 = (1.0f - 0.85) / N
 
     FSWAP                           ; Need a second iteration of nodes
     FFILL                           ; Fill the new frontier
@@ -71,7 +71,7 @@ inner_loop:
     FEMPTY                          ; Check if frontier is empty
     BZ swap_back
 
-    FPOP Rnode                       ; Rnode = v
+    FPOP Rnode                      ; Rnode = v
     HASE                            ; Check if v -> u
     BZ inner_loop
 
@@ -81,11 +81,11 @@ inner_loop:
     CMP Rval, Rzero                 ; if(L(v) > 0)
     BZ inner_loop
 
-    MOVC Ftmp3, Rval                ; Ftmp3 = L(v)
-    LD Ftmp4, Rnode                 ; Ftmp4 = PR(v)
-    DIV Ftmp3, Ftmp4, Ftmp3         ; Ftmp3 = PR(v) / L(v)
-    MULT Ftmp3, Ftmp3, #0.85        ; Ftmp3 = 0.85 * (PR(v) / L(v))
-    ADD Ftmp2, Ftmp2, Ftmp3         ; Ftmp2 += Ftmp3
+    MOVC f3, Rval                   ; f3 = L(v)
+    LD f4, Rnode                    ; f4 = PR(v)
+    DIV f3, f4, f3                  ; f3 = PR(v) / L(v)
+    MUL f3, f3, #0.85               ; f3 = 0.85 * (PR(v) / L(v))
+    ADD f2, f2, f3                  ; f2 += f3
 
     JMP inner_loop
 

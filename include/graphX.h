@@ -86,8 +86,7 @@ enum {
     R_NODE = 0,
     R_NBR,
     R_VAL,
-    R_ACC,
-    R_TMP1,
+    R_TMP1 = 0,
     R_TMP2,
     R_TMP3,
     R_TMP4,
@@ -109,8 +108,7 @@ enum {
 };
 
 enum {
-    F_ACC = 0,
-    F_TMP1,
+    F_TMP1 = 0,
     F_TMP2,
     F_TMP3,
     F_TMP4,
@@ -188,23 +186,22 @@ typedef struct graphX_vm_t {
             int32_t     Rnode;                  // Current node
             int32_t     Rnbr;                   // Neighbor node
             int32_t     Rval;                   // Weight value
-            int32_t     Racc;                   // Accumulator register
-            int32_t     Rtmp1;                  // Temporary register
-            int32_t     Rtmp2;                  // Temporary register
-            int32_t     Rtmp3;                  // Temporary register
-            int32_t     Rtmp4;                  // Temporary register
-            int32_t     Rtmp5;                  // Temporary register
-            int32_t     Rtmp6;                  // Temporary register
-            int32_t     Rtmp7;                  // Temporary register
-            int32_t     Rtmp8;                  // Temporary register
-            int32_t     Rtmp9;                  // Temporary register
-            int32_t     Rtmp10;                 // Temporary register
-            int32_t     Rtmp11;                 // Temporary register
-            int32_t     Rtmp12;                 // Temporary register
-            int32_t     Rtmp13;                 // Temporary register
-            int32_t     Rtmp14;                 // Temporary register
-            int32_t     Rtmp15;                 // Temporary register
-            int32_t     Rtmp16;                 // Temporary register
+            int32_t     r1;                     // Temporary register
+            int32_t     r2;                     // Temporary register
+            int32_t     r3;                     // Temporary register
+            int32_t     r4;                     // Temporary register
+            int32_t     r5;                     // Temporary register
+            int32_t     r6;                     // Temporary register
+            int32_t     r7;                     // Temporary register
+            int32_t     r8;                     // Temporary register
+            int32_t     r9;                     // Temporary register
+            int32_t     r10;                    // Temporary register
+            int32_t     r11;                    // Temporary register
+            int32_t     r12;                    // Temporary register
+            int32_t     r13;                    // Temporary register
+            int32_t     r14;                    // Temporary register
+            int32_t     r15;                    // Temporary register
+            int32_t     r16;                    // Temporary register
             int32_t     Rzero;                  // Zero register
             int32_t     Rcore;                  // Core ID register
         };
@@ -214,23 +211,22 @@ typedef struct graphX_vm_t {
     /* Float register file */
     union {
         struct {
-            float       Facc;                   // Float accumulator register
-            float       Ftmp1;                  // Temporary float register
-            float       Ftmp2;                  // Temporary float register
-            float       Ftmp3;                  // Temporary float register
-            float       Ftmp4;                  // Temporary float register
-            float       Ftmp5;                  // Temporary float register
-            float       Ftmp6;                  // Temporary float register
-            float       Ftmp7;                  // Temporary float register
-            float       Ftmp8;                  // Temporary float register
-            float       Ftmp9;                  // Temporary float register
-            float       Ftmp10;                 // Temporary float register
-            float       Ftmp11;                 // Temporary float register
-            float       Ftmp12;                 // Temporary float register
-            float       Ftmp13;                 // Temporary float register
-            float       Ftmp14;                 // Temporary float register
-            float       Ftmp15;                 // Temporary float register
-            float       Ftmp16;                 // Temporary float register
+            float       f1;                     // Temporary float register
+            float       f2;                     // Temporary float register
+            float       f3;                     // Temporary float register
+            float       f4;                     // Temporary float register
+            float       f5;                     // Temporary float register
+            float       f6;                     // Temporary float register
+            float       f7;                     // Temporary float register
+            float       f8;                     // Temporary float register
+            float       f9;                     // Temporary float register
+            float       f10;                    // Temporary float register
+            float       f11;                    // Temporary float register
+            float       f12;                    // Temporary float register
+            float       f13;                    // Temporary float register
+            float       f14;                    // Temporary float register
+            float       f15;                    // Temporary float register
+            float       f16;                    // Temporary float register
             float       Fzero;                  // Zero float register
         };
         float           F[F_COUNT];             // Register indexer
@@ -239,22 +235,22 @@ typedef struct graphX_vm_t {
     /* Integer vector register file */
     union {
         struct {
-            uint32_t    Vr1[LANE_SIZE];         // Vector register
-            uint32_t    Vr2[LANE_SIZE];         // Vector register
-            uint32_t    Vr3[LANE_SIZE];         // Vector register
-            uint32_t    Vr4[LANE_SIZE];         // Vector register
-            uint32_t    Vr5[LANE_SIZE];         // Vector register
-            uint32_t    Vr6[LANE_SIZE];         // Vector register
-            uint32_t    Vr7[LANE_SIZE];         // Vector register
-            uint32_t    Vr8[LANE_SIZE];         // Vector register
-            uint32_t    Vr9[LANE_SIZE];         // Vector register
-            uint32_t    Vr10[LANE_SIZE];        // Vector register
-            uint32_t    Vr11[LANE_SIZE];        // Vector register
-            uint32_t    Vr12[LANE_SIZE];        // Vector register
-            uint32_t    Vr13[LANE_SIZE];        // Vector register
-            uint32_t    Vr14[LANE_SIZE];        // Vector register
-            uint32_t    Vr15[LANE_SIZE];        // Vector register
-            uint32_t    Vr16[LANE_SIZE];        // Vector register
+            uint32_t    vr1[LANE_SIZE];         // Vector register
+            uint32_t    vr2[LANE_SIZE];         // Vector register
+            uint32_t    vr3[LANE_SIZE];         // Vector register
+            uint32_t    vr4[LANE_SIZE];         // Vector register
+            uint32_t    vr5[LANE_SIZE];         // Vector register
+            uint32_t    vr6[LANE_SIZE];         // Vector register
+            uint32_t    vr7[LANE_SIZE];         // Vector register
+            uint32_t    vr8[LANE_SIZE];         // Vector register
+            uint32_t    vr9[LANE_SIZE];         // Vector register
+            uint32_t    vr10[LANE_SIZE];        // Vector register
+            uint32_t    vr11[LANE_SIZE];        // Vector register
+            uint32_t    vr12[LANE_SIZE];        // Vector register
+            uint32_t    vr13[LANE_SIZE];        // Vector register
+            uint32_t    vr14[LANE_SIZE];        // Vector register
+            uint32_t    vr15[LANE_SIZE];        // Vector register
+            uint32_t    vr16[LANE_SIZE];        // Vector register
         };
         uint32_t        VR[VR_COUNT][LANE_SIZE];// Register indexer
     };
@@ -262,22 +258,22 @@ typedef struct graphX_vm_t {
     /* Float vector register file */
     union {
         struct {
-            float    Vf1[LANE_SIZE];            // Vector register
-            float    Vf2[LANE_SIZE];            // Vector register
-            float    Vf3[LANE_SIZE];            // Vector register
-            float    Vf4[LANE_SIZE];            // Vector register
-            float    Vf5[LANE_SIZE];            // Vector register
-            float    Vf6[LANE_SIZE];            // Vector register
-            float    Vf7[LANE_SIZE];            // Vector register
-            float    Vf8[LANE_SIZE];            // Vector register
-            float    Vf9[LANE_SIZE];            // Vector register
-            float    Vf10[LANE_SIZE];           // Vector register
-            float    Vf11[LANE_SIZE];           // Vector register
-            float    Vf12[LANE_SIZE];           // Vector register
-            float    Vf13[LANE_SIZE];           // Vector register
-            float    Vf14[LANE_SIZE];           // Vector register
-            float    Vf15[LANE_SIZE];           // Vector register
-            float    Vf16[LANE_SIZE];           // Vector register
+            float    vf1[LANE_SIZE];            // Vector register
+            float    vf2[LANE_SIZE];            // Vector register
+            float    vf3[LANE_SIZE];            // Vector register
+            float    vf4[LANE_SIZE];            // Vector register
+            float    vf5[LANE_SIZE];            // Vector register
+            float    vf6[LANE_SIZE];            // Vector register
+            float    vf7[LANE_SIZE];            // Vector register
+            float    vf8[LANE_SIZE];            // Vector register
+            float    vf9[LANE_SIZE];            // Vector register
+            float    vf10[LANE_SIZE];           // Vector register
+            float    vf11[LANE_SIZE];           // Vector register
+            float    vf12[LANE_SIZE];           // Vector register
+            float    vf13[LANE_SIZE];           // Vector register
+            float    vf14[LANE_SIZE];           // Vector register
+            float    vf15[LANE_SIZE];           // Vector register
+            float    vf16[LANE_SIZE];           // Vector register
         };
         float        VF[VF_COUNT][LANE_SIZE];   // Register indexer
     };
