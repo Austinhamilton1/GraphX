@@ -140,7 +140,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         return VM_HALT;
     case BZ:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+        if(arg3 >= PROGRAM_SIZE || arg3 < 0) return VM_ERROR;
         
         // Conditional check for zero
         if(vm->FLAGS & FLAG_ZERO)
@@ -148,7 +148,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         break;
     case BNZ:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+        if(arg3 >= PROGRAM_SIZE || arg3 < 0) return VM_ERROR;
 
         // Conditional check for non-zero
         if(!(vm->FLAGS & FLAG_ZERO))
@@ -156,7 +156,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         break;
     case BLT:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+        if(arg3 >= PROGRAM_SIZE || arg3 < 0) return VM_ERROR;
 
         // Conditional check for less than
         if(vm->FLAGS & FLAG_NEG)
@@ -164,7 +164,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         break;
     case BGE:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+        if(arg3 >= PROGRAM_SIZE || arg3 < 0) return VM_ERROR;
 
         // Conditional check for greater than
         if(vm->FLAGS & FLAG_POS || vm->FLAGS & FLAG_ZERO)
@@ -172,7 +172,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         break;
     case JMP:
         // Bounds checking
-        if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+        if(arg3 >= PROGRAM_SIZE || arg3 < 0) return VM_ERROR;
 
         // Unconditional branch
         vm->PC = arg3;
@@ -341,10 +341,9 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         break;
     case LD:
         // Load a value from memory into a register
-        // Bounds check
         if(flags & FLAG_I) {
             // Bounds check
-            if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+            if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
 
             if(flags & FLAG_F) {
                 memcpy(&vm->F[arg1], &vm->memory[arg3], sizeof(vm->memory[arg3]));
@@ -353,7 +352,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             }
         } else {
             // Bounds check
-            if(vm->R[arg2] > MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
+            if(vm->R[arg2] >= MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
             
             if(flags & FLAG_F) {
                 memcpy(&vm->F[arg1], &vm->memory[vm->R[arg2]], sizeof(vm->memory[vm->R[arg2]]));
@@ -366,7 +365,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         // Store a value from a register into memory
         if(flags & FLAG_I) {
             // Bounds check
-            if(arg3 > MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+            if(arg3 >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
 
             if(flags & FLAG_F) {
                 memcpy(&vm->memory[arg3], &vm->F[arg1], sizeof(vm->memory[arg3]));
@@ -375,7 +374,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             }
         } else {
             // Bounds check
-            if(vm->R[arg2] > MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
+            if(vm->R[arg2] >= MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
             if(flags & FLAG_F) {
                 memcpy(&vm->memory[vm->R[arg2]], &vm->F[arg1], sizeof(vm->memory[vm->R[arg2]]));
             } else {
@@ -409,6 +408,124 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         // Fill the frontier with all nodes in graph
         for(int32_t node = 0; node < vm->graph->n; node++) {
             frontier_push(vm->frontier, node);
+        }
+        break;
+    case VADD:
+        // Vectorized add
+        if(flags & FLAG_F) {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VF[arg1][i] = vm->VF[arg2][i] + vm->VF[arg3][i];
+            }
+        } else {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VR[arg1][i] = vm->VR[arg2][i] + vm->VR[arg3][i];
+            }
+        }
+        break;
+    case VSUB:
+        // Vectorized subtract
+        if(flags & FLAG_F) {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VF[arg1][i] = vm->VF[arg2][i] - vm->VF[arg3][i];
+            }
+        } else {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VR[arg1][i] = vm->VR[arg2][i] - vm->VR[arg3][i];
+            }
+        }
+        break;
+    case VMUL:
+        // Vectorized multiply
+        if(flags & FLAG_F) {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VF[arg1][i] = vm->VF[arg2][i] * vm->VF[arg3][i];
+            }
+        } else {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VR[arg1][i] = vm->VR[arg2][i] * vm->VR[arg3][i];
+            }
+        }
+        break;
+    case VDIV:
+        // Vectorized divide
+        if(flags & FLAG_F) {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VF[arg1][i] = vm->VF[arg2][i] / vm->VF[arg3][i];
+            }
+        } else {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VR[arg1][i] = vm->VR[arg2][i] / vm->VR[arg3][i];
+            }
+        }
+        break;
+    case VLD:
+        // Vectorized load
+        if(flags & FLAG_I) {
+            // Bounds check
+            if(arg3 + LANE_SIZE >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+
+            if(flags & FLAG_F) {
+                memcpy(vm->VF[arg1], &vm->memory[arg3], LANE_SIZE * sizeof(vm->memory[arg3]));
+            } else {
+                memcpy(vm->VR[arg1], &vm->memory[arg3], LANE_SIZE * sizeof(vm->memory[arg3]));    
+            }
+        } else {
+            // Bounds check
+            if(vm->R[arg2] + LANE_SIZE >= MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
+            
+            if(flags & FLAG_F) {
+                memcpy(vm->VF[arg1], &vm->memory[vm->R[arg2]], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
+            } else {
+                memcpy(vm->VR[arg1], &vm->memory[vm->R[arg2]], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
+            }
+        }
+        break;
+    case VST:
+        // Vectorized store
+        if(flags & FLAG_I) {
+            // Bounds check
+            if(arg3 + LANE_SIZE >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
+
+            if(flags & FLAG_F) {
+                memcpy(&vm->memory[arg3], vm->VF[arg1], LANE_SIZE * sizeof(vm->memory[arg3]));
+            } else {
+                memcpy(&vm->memory[arg3], vm->VR[arg1], LANE_SIZE * sizeof(vm->memory[arg3]));    
+            }
+        } else {
+            // Bounds check
+            if(vm->R[arg2] + LANE_SIZE >= MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
+            
+            if(flags & FLAG_F) {
+                memcpy(&vm->memory[vm->R[arg2]], vm->VF[arg1], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
+            } else {
+                memcpy(&vm->memory[vm->R[arg2]], vm->VR[arg1], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
+            }
+        }
+        break;
+    case VSET:
+        // Vectorized set
+        if(flags & FLAG_F) {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VF[arg1][i] = farg;
+            }
+        } else {
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->VR[arg1][i] = arg3;
+            }
+        }
+        break;
+    case VSUM:
+        // Vectorized reduce, sum
+        if(flags & FLAG_F) {
+            vm->F[arg1] = 0.0f;
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->F[arg1] += vm->VF[arg2][i];
+            }
+        } else {
+            vm->R[arg1] = 0;
+            for(int i = 0; i < LANE_SIZE; i++) {
+                vm->R[arg1] += vm->VR[arg2][i];
+            }
         }
         break;
     
