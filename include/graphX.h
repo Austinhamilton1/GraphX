@@ -17,7 +17,6 @@
 
 #define FLAG_I      0x1     // Instruction is I-type
 #define FLAG_F      0x2     // Instruction is float type
-#define FLAG_R      0x4     // Instruction is vector type
 
 #define FLAG_ZERO   0x1     // Check if CMP resulted in zero
 #define FLAG_NEG    0x2     // Check if CMP resulted in negative
@@ -63,20 +62,6 @@ typedef enum {
     FEMPTY,     // Check if frontier is empty
     FSWAP,      // Swap next frontier and current frontier buffers
     FFILL,      // Fill the frontier with all nodes in graph
-
-    /* Vector processing */
-    VADD,       // Vector addition
-    VSUB,       // Vector subtraction
-    VMUL,       // Vector multiplication
-    VDIV,       // Vector division
-    VLD,        // Load a vector from memory
-    VST,        // Store a vector to memory
-    VSET,       // Broadcast constant
-    VSUMR,      // Sum reduction of the vector
-    VMIN,       // Minimum of two vectors
-    VMAX,       // Maximum of two vectors
-    VMINR,      // Minimum reduction of a vector
-    VMAXR,      // Maximum reduction of a vector
 
     /* Multicore/synchronization control */
     /* These are left unimplemented for the VM */
@@ -131,49 +116,6 @@ enum {
     F_TMP16,
     F_ZERO,
     F_COUNT,
-};
-
-enum {
-    VR_NODE = 0,
-    VR_NBR,
-    VR_VAL,
-    VR_1,
-    VR_2,
-    VR_3,
-    VR_4,
-    VR_5,
-    VR_6,
-    VR_7,
-    VR_8,
-    VR_9,
-    VR_10,
-    VR_11,
-    VR_12,
-    VR_13,
-    VR_14,
-    VR_15,
-    VR_16,
-    VR_COUNT,
-};
-
-enum {
-    VF_1 = 0,
-    VF_2,
-    VF_3,
-    VF_4,
-    VF_5,
-    VF_6,
-    VF_7,
-    VF_8,
-    VF_9,
-    VF_10,
-    VF_11,
-    VF_12,
-    VF_13,
-    VF_14,
-    VF_15,
-    VF_16,
-    VF_COUNT,
 };
 
 
@@ -239,59 +181,7 @@ typedef struct graphX_vm_t {
         };
         float           F[F_COUNT];             // Register indexer
     };
-
-    /* Integer vector register file */
-    union {
-        struct {
-            uint32_t    vRnode[LANE_SIZE];      // Vector Rnode
-            uint32_t    vRnbr[LANE_SIZE];       // Vector Rnbr
-            uint32_t    vRval[LANE_SIZE];       // Vector Rval
-            uint32_t    vr1[LANE_SIZE];         // Vector register
-            uint32_t    vr2[LANE_SIZE];         // Vector register
-            uint32_t    vr3[LANE_SIZE];         // Vector register
-            uint32_t    vr4[LANE_SIZE];         // Vector register
-            uint32_t    vr5[LANE_SIZE];         // Vector register
-            uint32_t    vr6[LANE_SIZE];         // Vector register
-            uint32_t    vr7[LANE_SIZE];         // Vector register
-            uint32_t    vr8[LANE_SIZE];         // Vector register
-            uint32_t    vr9[LANE_SIZE];         // Vector register
-            uint32_t    vr10[LANE_SIZE];        // Vector register
-            uint32_t    vr11[LANE_SIZE];        // Vector register
-            uint32_t    vr12[LANE_SIZE];        // Vector register
-            uint32_t    vr13[LANE_SIZE];        // Vector register
-            uint32_t    vr14[LANE_SIZE];        // Vector register
-            uint32_t    vr15[LANE_SIZE];        // Vector register
-            uint32_t    vr16[LANE_SIZE];        // Vector register
-        };
-        uint32_t        VR[VR_COUNT][LANE_SIZE];// Register indexer
-    };
     
-    /* Float vector register file */
-    union {
-        struct {
-            float       vf1[LANE_SIZE];         // Vector register
-            float       vf2[LANE_SIZE];         // Vector register
-            float       vf3[LANE_SIZE];         // Vector register
-            float       vf4[LANE_SIZE];         // Vector register
-            float       vf5[LANE_SIZE];         // Vector register
-            float       vf6[LANE_SIZE];         // Vector register
-            float       vf7[LANE_SIZE];         // Vector register
-            float       vf8[LANE_SIZE];         // Vector register
-            float       vf9[LANE_SIZE];         // Vector register
-            float       vf10[LANE_SIZE];        // Vector register
-            float       vf11[LANE_SIZE];        // Vector register
-            float       vf12[LANE_SIZE];        // Vector register
-            float       vf13[LANE_SIZE];        // Vector register
-            float       vf14[LANE_SIZE];        // Vector register
-            float       vf15[LANE_SIZE];        // Vector register
-            float       vf16[LANE_SIZE];        // Vector register
-        };
-        float           VF[VF_COUNT][LANE_SIZE];// Register indexer
-    };
-
-    uint8_t             rMask;                  // Mask for integer vectors
-    uint8_t             fMask;                  // Mask for float vectors
-
     /* Memory */
     uint64_t            program[PROGRAM_SIZE];  // Instructions to run
     int32_t             memory[MEMORY_SIZE];    // Memory

@@ -20,7 +20,6 @@ REGISTER_ARG_MASK       = 0x000000FF
 IMMEDIATE_ARG_MASK      = 0xFFFFFFFF
 FLAG_I                  = 0x00000001
 FLAG_F                  = 0x00000002
-FLAG_V                  = 0x00000004
 
 register_names = {
     'Rnode': 0,
@@ -61,43 +60,6 @@ register_names = {
     'f15': 35,
     'f16': 36,
     'Fzero': 37,
-    'vRnode': 38,
-    'vRnbr': 39,
-    'vRval': 40,
-    'vr1': 41,
-    'vr2': 42,
-    'vr3': 43,
-    'vr4': 44,
-    'vr5': 45,
-    'vr6': 46,
-    'vr7': 47,
-    'vr8': 48,
-    'vr9': 49,
-    'vr10': 50,
-    'vr11': 51,
-    'vr12': 52,
-    'vr13': 53,
-    'vr14': 54,
-    'vr15': 55,
-    'vr16': 56,
-    'vf1': 57,
-    'vf2': 58,
-    'vf3': 59,
-    'vf4': 60,
-    'vf5': 61,
-    'vf6': 62,
-    'vf7': 63,
-    'vf8': 64,
-    'vf9': 65,
-    'vf10': 66,
-    'vf11': 67,
-    'vf12': 68,
-    'vf13': 69,
-    'vf14': 70,
-    'vf15': 71,
-    'vf16': 72,
-    'rMask': 0xFE,
-    'fMask': 0xFF,
 }
 
 def reg_type(reg):
@@ -105,10 +67,6 @@ def reg_type(reg):
         return 'r'
     if reg >= register_names['f1'] and reg <= register_names['Fzero']:
         return 'f'
-    if reg >= register_names['vRnode'] and reg <= register_names['vr16']:
-        return 'vr'
-    if reg >= register_names['vf1'] and reg <= register_names['vf16']:
-        return 'vf'
 
 '''=== Instruction Encoding ====================================================='''
 
@@ -139,20 +97,10 @@ OPCODES = {
     'FEMPTY': 23,   # Check if frontier is empty
     'FSWAP': 24,    # Swap next frontier and current frontier buffers
     'FFILL': 25,    # Fill the frontier with all nodes in graph
-    'VADD': 26,     # Vector addition
-    'VSUB': 27,     # Vector subtraction
-    'VMUL': 28,     # Vector multiplication
-    'VDIV': 29,     # Vector division
-    'VLD': 30,      # Vector load
-    'VST': 31,      # Vector store
-    'VSET': 32,     # Vector broadcast
-    'VSUM': 33,     # Vector sum
-    'VMIN': 34,     # Vector min
-    'VMAX': 35,     # Vector max
-    # 'PARALLEL': 34, # Run next block of code with multicore mode
-    # 'BARRIER': 35,  # Wait until all cores reach this code before continuing
-    # 'LOCK': 36,     # Mutual exclusion lock on a resource
-    # 'UNLOCK': 37,   # Unlock mutual exclusion lock
+    # 'PARALLEL': , # Run next block of code with multicore mode
+    # 'BARRIER': ,  # Wait until all cores reach this code before continuing
+    # 'LOCK': ,     # Mutual exclusion lock on a resource
+    # 'UNLOCK': ,   # Unlock mutual exclusion lock
 }
 
 def encode_instruction(op, args):
@@ -229,7 +177,7 @@ def encode_instruction(op, args):
                 # Set immediate value and flags
                 r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
                 flags = FLAG_I | FLAG_F
-            elif rtype == 'r':
+            elif rtype == 'r' or rtype == 'm':
                 r1 = int(args[1][1:]) & IMMEDIATE_ARG_MASK
                 flags = FLAG_I
             else:
@@ -245,7 +193,7 @@ def encode_instruction(op, args):
 
                 r1 = (r1 & REGISTER_ARG_MASK) << 32
                 flags = FLAG_F
-            elif rtype == 'r':
+            elif rtype == 'r' or rtype == 'm':
                 r1 = (int(args[1]) & REGISTER_ARG_MASK) << 32
                 flags = 0x0
             else:
@@ -257,68 +205,6 @@ def encode_instruction(op, args):
     elif op in ['FPUSH', 'FPOP', 'DEG']:
         r = int(args[0]) & REGISTER_ARG_MASK
         return opcode | (r << 40)
-    
-    # R-R-R vector operations
-    elif op in ['VADD', 'VSUB', 'VMUL', 'VDIV']:
-        r0 = int(args[0]) & REGISTER_ARG_MASK
-        r1 = int(args[1]) & REGISTER_ARG_MASK
-        r2 = int(args[2]) & REGISTER_ARG_MASK
-
-        rtype = reg_type(r0)
-
-        # Check for float instruction
-        if rtype == 'vf':
-            r0 -= register_names['vf1']
-            r1 -= register_names['vf1']
-            r2 -= register_names['vf1']
-            flags = FLAG_F
-        elif rtype == 'vr':
-            r0 -= register_names['vRnode']
-            r1 -= register_names['vRnode']
-            r2 -= register_names['vRnode']
-            flags = 0x0
-        else:
-            raise ValueError('Invalid register')
-
-        return opcode | (flags << 48) | (r0 << 40) | (r1 << 36) | (r2)
-    
-    # R-R/I vector operations
-    elif op in ['VLD', 'VST', 'VSET']:
-        r0 = int(args[0]) & REGISTER_ARG_MASK
-
-        rtype = reg_type(r0)
-
-        # Check for immediate instruction
-        if args[1].startswith('#'):
-            # Check for float instruction
-            if rtype == 'vf':
-                r0 -= register_names['vf1']
-                r1 = struct.unpack('<I', struct.pack('<f', float(args[1][1:])))[0] & IMMEDIATE_ARG_MASK
-                flags = FLAG_I | FLAG_F
-            elif rtype == 'vr':
-                r0 -= register_names['vRnode']
-                r1 = int(args[1][1:])
-                flags = FLAG_I
-            else:
-                raise ValueError('Invalid register')
-        else:
-            # Check for float instruction
-            if rtype == 'vf':
-                r0 -= register_names['vf1']
-                r1 = int(args[1]) - register_names['vf1']
-
-                r1 = (r1 & REGISTER_ARG_MASK) << 32
-                flags = FLAG_F
-            elif rtype == 'vr':
-                r0 -= register_names['vRnode']
-                r1 = int(args[1]) - register_names['vRnode']
-
-                r1 = (r1 & REGISTER_ARG_MASK) << 32
-                flags = 0x0
-            else:
-                raise ValueError('Invalid register')
-            
-        return opcode | (flags << 48) | (r0 << 40) | r1
 
     # Invalid opcode
     else:

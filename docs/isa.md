@@ -96,18 +96,6 @@ The **GraphX ISA** defines a 64-bit instruction format designed for graph proces
 | `FSWAP` | 24 | Swap the frontier with the next frontier | `swap(frontier, next_frontier)` | None |
 | `FFILL` | 25 | Fill the frontier with all nodes in the graph | `for(node in graph_nodes) do push(froniter, node)` | None |
 
-### Vectorized Instructions
-| **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
-| ------------ | ---------- | --------------- | ------------- | --------- |
-| `VADD` | 26 | Vectorized addition | `Dest[0:3] = Src1[0:3] + Src2[0:3]` | `FLAG_F` |
-| `VSUB` | 27 | Vectorized subtraction | `Dest[0:3] = Src1[0:3] - Src2[0:3]` | `FLAG_F` |
-| `VMUL` | 28 | Vectorized multiplication | `Dest[0:3] = Src1[0:3] * Src2[0:3]` | `FLAG_F` |
-| `VDIV` | 29 | Vectorized division | `Dest[0:3] = Src1[0:3] / Src2[0:3]` | `FLAG_F` |
-| `VLD` | 30 | Vectorized load | `Dest[0:3] = memory[Imm:Imm+3]` or `Dest[0:3] = memory[Src1:Src1+3]` | `FLAG_I`, `FLAG_F` |
-| `VST` | 31 | Vectorized store | `memory[Imm:Imm+3] = Dest[0:3]` or `memory[Src1:Src1+3] = Dest[0:3]` | `FLAG_I`, `FLAG_F` |
-| `VSET` | 32 | Set all values in a vector to an immediate value | `Dest[0:3] = Imm` | `FLAG_F` |
-| `VSUM` | 33 | Sum all values in a vector and store result in a register | `Dest = sum(Src1[0:3])` | `FLAG_F` |
-
 ### Multicore/Synchronization Control
 | **Mnemonic** | **Opcode** | **Description** | **Operation** | **Flags** |
 | ------------ | ---------- | --------------- | ------------- | --------- |
@@ -582,124 +570,8 @@ FPOP Rnode
 ...
 ```
 
-### `VADD`
- - **Opcode:** 0x1A
- - **Operands:** Destination vector register and two source vector registers (flags determines integer or floating point arithmetic)
- - **Effect:**
-    - Add source registers in parallel
-    - Store in destination register
- - **Usage:**
-```
-...
-VSET Vr1, #1
-VSET Vr2, #2
-VADD Vr3, Vr1, Vr2          ; Vr3 is full of 3's now
-...
-```
-
-### `VSUB`
- - **Opcode:** 0x1B
- - **Operands:** Destination vector register and two source vector registers (flags determines integer or floating point arithmetic)
- - **Effect:**
-    - Subtract source registers in parallel
-    - Store in destination register
- - **Usage:**
-```
-...
-VSET Vr1, #7
-VSET Vr2, #3
-VSUB Vr3, Vr1, Vr2          ; Vr3 is full of 4's now
-...
-```
-
-### `VMUL`
- - **Opcode:** 0x1C
- - **Operands:** Destination vector register and two source vector registers (flags determines integer or floating point arithmetic)
- - **Effect:**
-    - Multiply source registers in parallel
-    - Store in destination register
- - **Usage:**
-```
-...
-VSET Vr1, #5
-VSET Vr2, #5
-VMUL Vr3, Vr1, Vr2          ; Vr3 is full of 25's now
-...
-```
-
-### `VDIV`
- - **Opcode:** 0x1D
- - **Operands:** Destination vector register and two source vector registers (flags determines integer or floating point arithmetic)
- - **Effect:**
-    - Divide source registers in parallel
-    - Store in destination register
- - **Usage:**
-```
-...
-VSET Vr1, #10
-VSET Vr2, #2
-VADD Vr3, Vr1, Vr2          ; Vr3 is full of 5's now
-...
-```
-
-### `VLD`
- - **Opcode:** 0x1E
- - **Operands:** Destination register and immediate or source register (`FLAG_I` determines if immediate or register, `FLAG_F` determines if integer or float)
- - **Effect:**
-    - Vector register is filled with data from memory
- - **Usage:**
-```
-...
-VLD Vf3, #16                ; Vf3 is filled with data from memory[16:19]
-...
-VLD Vr4, Rtmp7              ; Vr4 is filled with data from memory[Rtmp7:Rtmp7+3]
-...
-```
-
-### `VST`
- - **Opcode:** 0x1F
- - **Operands:** Destination register and immediate or source register (`FLAG_I` determines if immediate or register, `FLAG_F` determines if integer or float)
- - **Effect:**
-    - Memory is filled with data from vector register
- - **Usage:**
-```
-...
-VST Vf3, #16                ; memory[16:19] is filled with data from Vf3
-...
-VST Vr4, Rtmp7              ; memory[Rtmp7:Rtmp7+3] is filled with data from Vr4
-...
-```
-
-### `VSET`
- - **Opcode:** 0x20
- - **Operands:** Destination register and immediate value (`FLAG_I` determines if immediate or register, `FLAG_F` determines if integer or float)
- - **Effect:**
-    - `Dest` is filled with `Src1`/`Imm`
- - **Usage:**
-```
-...
-VSET Vr8, #5                ; Vr8 is filled with 5's
-...
-VSET Vf5, Ftmp8             ; Vf5 is filled with Ftmp8
-...
-```
-
-### `VSUM`
- - **Opcode:** 0x21
- - **Operands:** Destination register and vector register (`FLA_F` determines if integer or float)
- - **Effect:**
-    - Sum up vector register values
-    - Store result in `Dest`
- - **Usage:**
-```
-...
-VSET Vr4, 4
-VSUM Rtmp1, Vr4             ; Rtmp1 = Rtmp1 + 16
-...
-```
-
 ### `PARALLEL`
- - **Opcode:** 0x22
+ - **Opcode:** 0x
  - **Operands:** Not implemented yet 
  - **Effect:**
     - Not implemented yet
@@ -709,7 +581,7 @@ Not implemented yet
 ```
 
 ### `BARRIER`
- - **Opcode:** 0x23
+ - **Opcode:** 0x
  - **Operands:** Not implemented yet
  - **Effect:**
     - Not implemented yet
@@ -719,7 +591,7 @@ Not implemented yet
 ```
 
 ### `LOCK`
- - **Opcode:** 0x24
+ - **Opcode:** 0x
  - **Operands:** Not implemented yet
  - **Effect:**
     - Not implemented yet
@@ -729,7 +601,7 @@ Not implemented yet
 ```
 
 ### `UNLOCK`
- - **Opcode:** 0x25
+ - **Opcode:** 0x
  - **Operands:** Not implemented yet
  - **Effect:** 
     - Not implemented yet

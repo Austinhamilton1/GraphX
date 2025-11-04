@@ -95,18 +95,6 @@ int decode(graphX_vm_t *vm, uint64_t data) {
     case FEMPTY:
     case FSWAP:
     case FFILL:
-    case VADD:
-    case VSUB:
-    case VMUL:
-    case VDIV:
-    case VLD:
-    case VST:
-    case VSET:
-    case VSUMR:
-    case VMIN:
-    case VMAX:
-    case VMINR:
-    case VMAXR:
     // case PARALLEL:
     // case BARRIER:
     // case LOCK:
@@ -191,15 +179,15 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
         // Bounds check 
         if(arg3 >= 4 || arg3 < 0) return VM_ERROR;
         // Reset flags
-        vm->FLAGS = 0;
-        // Get the next neighbor
+        vm->FLAGS = 0;// Get the next neighbor
         if(vm->graph->row_index[vm->Rnode] + vm->niter[arg3] < vm->graph->row_index[vm->Rnode+1]) {
             vm->Rnbr = vm->graph->col_index[vm->graph->row_index[vm->Rnode] + vm->niter[arg3]];
             vm->Rval = vm->graph->values[vm->graph->row_index[vm->Rnode] + vm->niter[arg3]];
             vm->niter[arg3]++;
         }
-        else
+        else {
             vm->FLAGS |= FLAG_ZERO; // Signal done
+        }
         break;
     case EITER:
         // Initialize the internal iterator and start node
@@ -209,7 +197,6 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
     case ENEXT:
         // Reset flags
         vm->FLAGS = 0;
-
         // End of row, go to next populated column
         if(vm->Rnode < vm->graph->n && vm->graph->row_index[vm->Rnode] + vm->eiter >= vm->graph->row_index[vm->Rnode+1]) {
             vm->Rnode++;
@@ -325,25 +312,13 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             if(flags & FLAG_F) {
                 vm->F[arg1] = farg;
             } else {
-                if(arg1 == 0xFE) {
-                    vm->rMask = (uint8_t)arg3;
-                } else if(arg1 == 0xFF) {
-                    vm->fMask = (uint8_t)arg3;
-                } else {
-                    vm->R[arg1] = arg3;
-                }
+                vm->R[arg1] = arg3;
             }
         } else {
             if(flags & FLAG_F) {
                 vm->F[arg1] = vm->F[arg2];
             } else {
-                if(arg1 == 0xFE) {
-                    vm->rMask = vm->R[arg2];
-                } else if(arg1 == 0xFF) {
-                    vm->fMask = vm->R[arg2];
-                } else {
-                    vm->R[arg1] = vm->R[arg2];
-                }
+                vm->R[arg1] = vm->R[arg2];
             }
         }
         break;
@@ -426,195 +401,7 @@ vm_status_t execute(graphX_vm_t *vm, int flags) {
             frontier_push(vm->frontier, node);
         }
         break;
-    case VADD:
-        // Vectorized add
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VF[arg1][i] = vm->VF[arg2][i] + vm->VF[arg3][i];
-            }
-        } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VR[arg1][i] = vm->VR[arg2][i] + vm->VR[arg3][i];
-            }
-        }
-        break;
-    case VSUB:
-        // Vectorized subtract
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VF[arg1][i] = vm->VF[arg2][i] - vm->VF[arg3][i];
-            }
-        } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VR[arg1][i] = vm->VR[arg2][i] - vm->VR[arg3][i];
-            }
-        }
-        break;
-    case VMUL:
-        // Vectorized multiply
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VF[arg1][i] = vm->VF[arg2][i] * vm->VF[arg3][i];
-            }
-        } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VR[arg1][i] = vm->VR[arg2][i] * vm->VR[arg3][i];
-            }
-        }
-        break;
-    case VDIV:
-        // Vectorized divide
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VF[arg1][i] = vm->VF[arg2][i] / vm->VF[arg3][i];
-            }
-        } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VR[arg1][i] = vm->VR[arg2][i] / vm->VR[arg3][i];
-            }
-        }
-        break;
-    case VLD:
-        // Vectorized load
-        if(flags & FLAG_I) {
-            // Bounds check
-            if(arg3 + LANE_SIZE >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
 
-            if(flags & FLAG_F) {
-                memcpy(vm->VF[arg1], &vm->memory[arg3], LANE_SIZE * sizeof(vm->memory[arg3]));
-            } else {
-                memcpy(vm->VR[arg1], &vm->memory[arg3], LANE_SIZE * sizeof(vm->memory[arg3]));    
-            }
-        } else {
-            // Bounds check
-            if(vm->R[arg2] + LANE_SIZE >= MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
-            
-            if(flags & FLAG_F) {
-                memcpy(vm->VF[arg1], &vm->memory[vm->R[arg2]], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
-            } else {
-                memcpy(vm->VR[arg1], &vm->memory[vm->R[arg2]], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
-            }
-        }
-        break;
-    case VST:
-        // Vectorized store
-        if(flags & FLAG_I) {
-            // Bounds check
-            if(arg3 + LANE_SIZE >= MEMORY_SIZE || arg3 < 0) return VM_ERROR;
-
-            if(flags & FLAG_F) {
-                memcpy(&vm->memory[arg3], vm->VF[arg1], LANE_SIZE * sizeof(vm->memory[arg3]));
-            } else {
-                memcpy(&vm->memory[arg3], vm->VR[arg1], LANE_SIZE * sizeof(vm->memory[arg3]));    
-            }
-        } else {
-            // Bounds check
-            if(vm->R[arg2] + LANE_SIZE >= MEMORY_SIZE || vm->R[arg2] < 0) return VM_ERROR;
-            
-            if(flags & FLAG_F) {
-                memcpy(&vm->memory[vm->R[arg2]], vm->VF[arg1], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
-            } else {
-                memcpy(&vm->memory[vm->R[arg2]], vm->VR[arg1], LANE_SIZE * sizeof(vm->memory[vm->R[arg2]]));
-            }
-        }
-        break;
-    case VSET:
-        // Vectorized set
-        if(flags & FLAG_I) {
-            if(flags & FLAG_F) {
-                for(int i = 0; i < LANE_SIZE; i++) {
-                    vm->VF[arg1][i] = farg;
-                }
-            } else {
-                for(int i = 0; i < LANE_SIZE; i++) {
-                    vm->VR[arg1][i] = arg3;
-                }
-            }
-        } else {
-            if(flags & FLAG_F) {
-                for(int i = 0; i < LANE_SIZE; i++) {
-                    vm->VF[arg1][i] = vm->F[arg2];
-                }
-            } else {
-                for(int i = 0; i < LANE_SIZE; i++) {
-                    vm->VR[arg1][i] = vm->R[arg2];
-                }
-            }
-        }
-        break;
-    case VSUMR:
-        // Vectorized reduce, sum
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->F[arg1] += vm->VF[arg2][i];
-            }
-        } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->R[arg1] += vm->VR[arg2][i];
-            }
-        }
-        break;
-    case VMIN:
-        // Vectorized minimum
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VF[arg1][i] = vm->VF[arg2][i] < vm->VF[arg3][i] ? vm->VF[arg2][i] : vm->VF[arg3][i];
-            }
-        } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VR[arg1][i] = vm->VR[arg2][i] < vm->VR[arg3][i] ? vm->VR[arg2][i] : vm->VR[arg3][i];
-            }
-        }
-        break;
-    case VMAX:
-        // Vectorized maximum
-        if(flags & FLAG_F) {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VF[arg1][i] = vm->VF[arg2][i] > vm->VF[arg3][i] ? vm->VF[arg2][i] : vm->VF[arg3][i];
-            }
-        } else {
-            for(int i = 0; i < LANE_SIZE; i++) {
-                vm->VR[arg1][i] = vm->VR[arg2][i] > vm->VR[arg3][i] ? vm->VR[arg2][i] : vm->VR[arg3][i];
-            }
-        }
-        break;
-    case VMINR:
-        // Vectorized min reduction
-        if(flags & FLAG_F) {
-            vm->F[arg1] = vm->VF[arg2][0];
-            for(int i = 0; i < LANE_SIZE; i++) {
-                if(vm->VF[arg2][i] < vm->F[arg1]) {
-                    vm->F[arg1] = vm->VF[arg2][i];
-                }
-            }
-        } else {
-            vm->R[arg1] = vm->VR[arg2][0];
-            for(int i = 0; i < LANE_SIZE; i++) {
-                if(vm->VR[arg2][i] < vm->R[arg1]) {
-                    vm->R[arg1] = vm->VR[arg2][i];
-                }
-            }
-        }
-        break;
-    case VMAXR:
-        // Vectorized max reduction
-        if(flags & FLAG_F) {
-            vm->F[arg1] = vm->VF[arg2][0];
-            for(int i = 0; i < LANE_SIZE; i++) {
-                if(vm->VF[arg2][i] > vm->F[arg1]) {
-                    vm->F[arg1] = vm->VF[arg2][i];
-                }
-            }
-        } else {
-            vm->R[arg1] = vm->VR[arg2][0];
-            for(int i = 0; i < LANE_SIZE; i++) {
-                if(vm->VR[arg2][i] > vm->R[arg1]) {
-                    vm->R[arg1] = vm->VR[arg2][i];
-                }
-            }
-        }
-        break;
-    
     /* 
      * Concurrency doesn't apply to the VM, this is left
      * to be implemented in hardware. The FPGA implementation
@@ -680,8 +467,6 @@ void graphX_reset(graphX_vm_t *vm) {
 
     memset(vm->R, 0, sizeof(vm->R));
     memset(vm->F, 0, sizeof(vm->F));
-    memset(vm->VR, 0, sizeof(vm->VR));
-    memset(vm->VF, 0, sizeof(vm->VF));
 
     for(int i = 0; i < 4; i++)
         vm->niter[i] = 0;
