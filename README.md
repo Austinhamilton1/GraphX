@@ -10,7 +10,7 @@ The project consists of two major components:
 ## Overview
 
 GraphX is designed to provide a minimal yet expressive instruction set for graph processing, enabling both rapid prototyping in software and scalable execution in hardware.  
-The system follows a **Multi-core SIMD (Single Instruction, Multiple Data)** execution model with support for barrier synchronization and parallel execution primitives.
+The system follows a **Multi-core SIMT (Single Instruction, Multiple Thread)** execution model with support for barrier synchronization and parallel execution primitives.
 
 ### Key Features
 - 64-bit fixed-length instruction format for deterministic decoding
@@ -97,7 +97,6 @@ The **Verilog** implementation realizes the GraphX VM in hardware for parallel g
  - [ ] Extend instruction set for graph-specific operations (e.g., `RELAX`, `PUSH_EDGE`)
  - [ ] Develop compiler frontend for automatic graph algorithm translation
  - [ ] Incorporate performance counters and profiling support in FPGA version
- - [ ] Vector instructions for SIMD architecture
 ---
 
 ## Documentation
